@@ -2,12 +2,12 @@ pub enum Token {
     Relation, // Double Colon ::
     TypeDef, // Single Colon :
     Identifier(String), // Start with [a-z][A-Z] but can contain [a-z][A-Z][0-9] and _
-    Seperator, // Comma ,
+    Separator, // Comma ,
     If,
-    FunctionDef, // "fn" Identifier 
-    ProcessDef, // "proc" Identifier
+    FunctionDef(String), // "fn" Identifier 
+    ProcessDef(String), // "proc" Identifier
     SaveDef, // "SAVE" Identier
-    Annotation, // @<Itendifier>
+    Annotation(String), // @<Itendifier>
     OpenBrace,
     CloseBrace,
     OpenBracket,
@@ -29,7 +29,7 @@ pub enum Token {
     False
 }
 
-impl std::fmt::Debug for Token { // added in for debugging
+impl std::fmt::Debug for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Relation => write!(f, "Relation"),
@@ -37,10 +37,10 @@ impl std::fmt::Debug for Token { // added in for debugging
             Self::Identifier(arg0) => f.debug_tuple("Identifier").field(arg0).finish(),
             Self::Seperator => write!(f, "Seperator"),
             Self::If => write!(f, "If"),
-            Self::FunctionDef => write!(f, "FunctionDef"),
-            Self::ProcessDef => write!(f, "ProcessDef"),
+            Self::FunctionDef(arg0) => f.debug_tuple("FunctionDef").field(arg0).finish(),
+            Self::ProcessDef(arg0) => f.debug_tuple("ProcessDef").field(arg0).finish(),
             Self::SaveDef => write!(f, "SaveDef"),
-            Self::Annotation => write!(f, "Annotation"),
+            Self::Annotation(arg0) => f.debug_tuple("Annotation").field(arg0).finish(),
             Self::OpenBrace => write!(f, "OpenBrace"),
             Self::CloseBrace => write!(f, "CloseBrace"),
             Self::OpenBracket => write!(f, "OpenBracket"),
@@ -62,6 +62,7 @@ impl std::fmt::Debug for Token { // added in for debugging
             Self::False => write!(f, "False"),
         }
     }
+ // added in for debugging
 }
 
 pub fn tokenizer(code: &str) {
@@ -72,13 +73,31 @@ pub fn tokenizer(code: &str) {
             current if current.is_ascii_alphabetic() => {
                 let mut ident = String::new();
                 ident.push(current); // Pushes char we skip over
+
                 while let Some(current) = iter.next() {  // Use iter_next_if() probably
                     if current.is_alphanumeric() || current == '_' { // Check [a-z][A-Z][0-9] and _
                         ident.push(current);
                     } else { break; } // Break if not proper
                 }
-                tokens.push(Token::Identifier(ident));
+
+                if ident == String::from("fn") { tokens.push(Token::FunctionDef(ident)) }   // Bad code, replacing with better later
+                else if ident == String::from("proc") { tokens.push(Token::ProcessDef(ident))} 
+                else if ident == String::from("if") { tokens.push(Token::If)}
+                else if ident == String::from("SAVE") { tokens.push(Token::SaveDef)}
+                else { tokens.push(Token::Identifier(ident)) } 
             },
+            ':' => {
+                if let Some(next) = iter.peek() {
+                    if next == &':' { tokens.push(Token::Relation); iter.next(); } else { tokens.push(Token::TypeDef); }
+                } else { handdle_eof() }
+            },
+            ',' => tokens.push(Token::Separator),
+            '{' => tokens.push(Token::OpenBrace),
+            '}' => tokens.push(Token::CloseBrace),
+            '[' => tokens.push(Token::OpenBracket),
+            ']' => tokens.push(Token::CloseBracket),
+            '(' => tokens.push(Token::OpenPren),
+            ')' => tokens.push(Token::ClosePren),
             _ => ()
         }
     }
