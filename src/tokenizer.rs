@@ -5,8 +5,8 @@ pub enum Token {
     Identifier(String), // Start with [a-z][A-Z] but can contain [a-z][A-Z][0-9] and _
     Separator, // Comma ,
     If,
-    FunctionDef(String), // "fn" Identifier 
-    ProcessDef(String), // "proc" Identifier
+    FunctionDef, // "fn" Identifier 
+    ProcessDef, // "proc" Identifier
     SaveDef, // "SAVE" Identier
     Annotation(String), // @<Itendifier>
     OpenBrace,
@@ -24,8 +24,8 @@ pub enum Token {
     Assign, // =
     Concat, // &
     String(String),
-    Number(f64),
-    Int(i64),
+    Number(String),
+    Int(String),
     True,
     False
 }
@@ -37,10 +37,10 @@ impl std::fmt::Debug for Token {
             Self::TypeDef => write!(f, "TypeDef"),
             Self::Semicolon => write!(f, "Semicolon"),
             Self::Identifier(arg0) => f.debug_tuple("Identifier").field(arg0).finish(),
-            Self::Separator => write!(f, "Seperator"),
+            Self::Separator => write!(f, "Separator"),
             Self::If => write!(f, "If"),
-            Self::FunctionDef(arg0) => f.debug_tuple("FunctionDef").field(arg0).finish(),
-            Self::ProcessDef(arg0) => f.debug_tuple("ProcessDef").field(arg0).finish(),
+            Self::FunctionDef => write!(f, "FunctionDef"),
+            Self::ProcessDef => write!(f, "ProcessDef"),
             Self::SaveDef => write!(f, "SaveDef"),
             Self::Annotation(arg0) => f.debug_tuple("Annotation").field(arg0).finish(),
             Self::OpenBrace => write!(f, "OpenBrace"),
@@ -49,8 +49,8 @@ impl std::fmt::Debug for Token {
             Self::CloseBracket => write!(f, "CloseBracket"),
             Self::OpenPren => write!(f, "OpenPren"),
             Self::ClosePren => write!(f, "ClosePren"),
-            Self::Increment => write!(f, "Inc"),
-            Self::Decrement => write!(f, "Dec"),
+            Self::Increment => write!(f, "Increment"),
+            Self::Decrement => write!(f, "Decrement"),
             Self::Sum => write!(f, "Sum"),
             Self::Minus => write!(f, "Minus"),
             Self::Multiply => write!(f, "Multiply"),
@@ -64,6 +64,7 @@ impl std::fmt::Debug for Token {
             Self::False => write!(f, "False"),
         }
     }
+
  // added in for debugging
 }
 
@@ -79,14 +80,20 @@ pub fn tokenizer(code: &str) {
                 while let Some(current) = iter.next() {  // Use iter_next_if() probably
                     if current.is_alphanumeric() || current == '_' { // Check [a-z][A-Z][0-9] and _
                         ident.push(current);
-                    } else { break; } // Break if not proper
+                    } else { 
+                        match ident {
+                            n if n == String::from("fn") => { tokens.push(Token::FunctionDef) }
+                            n if n == String::from("proc") => { tokens.push(Token::ProcessDef) },
+                            n if n == String::from("if") => { tokens.push(Token::If) },
+                            n if n == String::from("SAVE") => { tokens.push(Token::SaveDef) },
+                            n if n == String::from("true") => { tokens.push(Token::True) },
+                            n if n == String::from("false") => { tokens.push(Token::False) },
+                            _ => tokens.push(Token::Identifier(ident))
+                        }
+                        if current == ';' { tokens.push(Token::Semicolon) }                       
+                        break; 
+                    } // Break if not proper
                 }
-
-                if ident == String::from("fn") { tokens.push(Token::FunctionDef(ident)) }   // Bad code, replacing with better later
-                else if ident == String::from("proc") { tokens.push(Token::ProcessDef(ident))} 
-                else if ident == String::from("if") { tokens.push(Token::If)}
-                else if ident == String::from("SAVE") { tokens.push(Token::SaveDef)}
-                else { tokens.push(Token::Identifier(ident)) } 
             },
             ':' => {
                 if let Some(next) = iter.peek() {
@@ -121,6 +128,7 @@ pub fn tokenizer(code: &str) {
                 }
                 tokens.push(Token::String(strg))              
             }
+            ';' => tokens.push(Token::Semicolon),
             '*' => tokens.push(Token::Multiply),
             '/' => tokens.push(Token::Divide),
             '=' => tokens.push(Token::Assign),
