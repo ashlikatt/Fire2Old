@@ -1,6 +1,7 @@
 pub enum Token {
     Relation, // Double Colon ::
     TypeDef, // Single Colon :
+    Semicolon,
     Identifier(String), // Start with [a-z][A-Z] but can contain [a-z][A-Z][0-9] and _
     Separator, // Comma ,
     If,
@@ -34,6 +35,7 @@ impl std::fmt::Debug for Token {
         match self {
             Self::Relation => write!(f, "Relation"),
             Self::TypeDef => write!(f, "TypeDef"),
+            Self::Semicolon => write!(f, "Semicolon"),
             Self::Identifier(arg0) => f.debug_tuple("Identifier").field(arg0).finish(),
             Self::Separator => write!(f, "Seperator"),
             Self::If => write!(f, "If"),
@@ -101,6 +103,24 @@ pub fn tokenizer(code: &str) {
                     if next == &'-' { tokens.push(Token::Decrement); iter.next(); } else { tokens.push(Token::Minus); }
                 } else { handdle_eof() }
             },
+            '@' => {
+                let mut annotation: String = String::new();
+                while let Some(current) = iter.next() {  // Use iter_next_if() probably
+                    if current.is_alphanumeric() || current == '_' { 
+                        annotation.push(current);
+                    } else { break; } // Break if not proper
+                }
+                tokens.push(Token::Annotation(annotation))            
+            }
+            '\"' => {
+                let mut strg: String = String::new();
+                while let Some(current) = iter.next() {  // Use iter_next_if() probably
+                    if current == '\"' { break }
+                    strg.push(current);
+
+                }
+                tokens.push(Token::String(strg))              
+            }
             '*' => tokens.push(Token::Multiply),
             '/' => tokens.push(Token::Divide),
             '=' => tokens.push(Token::Assign),
