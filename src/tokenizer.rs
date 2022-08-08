@@ -14,8 +14,8 @@ pub enum Token {
     CloseBracket,
     OpenPren,
     ClosePren,
-    Inc, // ++
-    Dec, // --
+    Increment, // ++
+    Decrement, // --
     Sum, 
     Minus,
     Multiply,
@@ -47,8 +47,8 @@ impl std::fmt::Debug for Token {
             Self::CloseBracket => write!(f, "CloseBracket"),
             Self::OpenPren => write!(f, "OpenPren"),
             Self::ClosePren => write!(f, "ClosePren"),
-            Self::Inc => write!(f, "Inc"),
-            Self::Dec => write!(f, "Dec"),
+            Self::Increment => write!(f, "Inc"),
+            Self::Decrement => write!(f, "Dec"),
             Self::Sum => write!(f, "Sum"),
             Self::Minus => write!(f, "Minus"),
             Self::Multiply => write!(f, "Multiply"),
@@ -91,6 +91,20 @@ pub fn tokenizer(code: &str) {
                     if next == &':' { tokens.push(Token::Relation); iter.next(); } else { tokens.push(Token::TypeDef); }
                 } else { handdle_eof() }
             },
+            '+' => {
+                if let Some(next) = iter.peek() {
+                    if next == &'+' { tokens.push(Token::Increment); iter.next(); } else { tokens.push(Token::Sum); }
+                } else { handdle_eof() }
+            },
+            '-' => {
+                if let Some(next) = iter.peek() {
+                    if next == &'-' { tokens.push(Token::Decrement); iter.next(); } else { tokens.push(Token::Minus); }
+                } else { handdle_eof() }
+            },
+            '*' => tokens.push(Token::Multiply),
+            '/' => tokens.push(Token::Divide),
+            '=' => tokens.push(Token::Assign),
+            '&' => tokens.push(Token::Concat),
             ',' => tokens.push(Token::Separator),
             '{' => tokens.push(Token::OpenBrace),
             '}' => tokens.push(Token::CloseBrace),
