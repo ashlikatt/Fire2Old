@@ -4,5 +4,5 @@ mod compiler;
 
 fn main() {
     println!("Hello, world!");
-    tokenizer::tokenizer("poop");
+    tokenizer::tokenizer("hey ideNTifiErs w0rk");
 }
