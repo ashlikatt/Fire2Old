@@ -35,7 +35,7 @@ impl std::fmt::Debug for Token {
             Self::Relation => write!(f, "Relation"),
             Self::TypeDef => write!(f, "TypeDef"),
             Self::Identifier(arg0) => f.debug_tuple("Identifier").field(arg0).finish(),
-            Self::Seperator => write!(f, "Seperator"),
+            Self::Separator => write!(f, "Seperator"),
             Self::If => write!(f, "If"),
             Self::FunctionDef(arg0) => f.debug_tuple("FunctionDef").field(arg0).finish(),
             Self::ProcessDef(arg0) => f.debug_tuple("ProcessDef").field(arg0).finish(),
