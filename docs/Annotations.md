@@ -12,7 +12,7 @@ Used before a struct definition to mark it as being an Event.
 `@Event(type: String, name: String, args: String...)`
 1. type - The type of event as it appears on the sign. ("PLAYER EVENT", "ENTITY EVENT", etc)
 2. name - The name of the event as it appears on the sign. ("Join", "RightClick", etc)
-3. args - List of Game Values to be supplied to the constructor when the event is called. ("Event Block Side", "Event Command", etc. `/i nbt` on a Game Value for more information)
+3. args - List of Game Values to be supplied to the constructor when the event is called. ("Event Block Side", "Event Command", etc. `/i tag list` on a Game Value for more information)
 
 Example stdlib:
 ```java
