@@ -8,6 +8,7 @@ pub enum Token {
             VarDef, // let -> Defines a new variable
             FunctionDef, // fn -> Defines a new function
             ProcessDef, // proc -> Defines a new process
+            Import, // import -> Imports from another file
         // Control
             If, // if -> Tests if a bool is true and returns if it is.
             For, // for -> Repeats over a range of values / iterator...?
@@ -35,9 +36,15 @@ pub enum Token {
             BoolAnd, // && -> True if both booleans are true
             BoolOr, // || -> False if both booleans are false
             BoolNot, // ! -> Negates a boolean's value
+            Equals, // == -> Tests equality between two values
+            NotEquals, // != -> Opposite of Equals
+            Greater, // > -> Tests if one value is greater than another
+            Less, // < -> Tests if one value is less than another
+            GreaterEqual, // >= -> Tests if one value is greater than or equal to another
+            LessEqual, // >= -> Tests if one value is less than or equal to another
         // Vars
             TypeDef, // : -> Specifies a variable's type, or a function's return type.
-            Separator, // , -> Separates arguments in function definitions and calls
+            Separator, // , -> Separates arguments in function definitions and calls, and separates 
     
     // Values
         Identifier(String), // Begins with a letter but can contain _s and numbers along with them.
@@ -78,6 +85,7 @@ pub fn tokenizer(code: &str) -> Result<Vec<Token>, CompileError> {
     while current<code.len() { // Loops until no more left. current = current char being looked at.
         let cur_slice = &code[current..];
         if cur_slice.starts_with("=") { tokens.push(Token::Assign); }
+        else if cur_slice.starts_with("==") { tokens.push(Token::Equals); current += 1; }
         else if cur_slice.starts_with("true") { tokens.push(Token::True); current += 3; }
         else if cur_slice.starts_with("false") { tokens.push(Token::False); current += 4; }
         else if cur_slice.starts_with(";") { tokens.push(Token::Semicolon); }
@@ -91,8 +99,13 @@ pub fn tokenizer(code: &str) -> Result<Vec<Token>, CompileError> {
         else if cur_slice.starts_with("/") { tokens.push(Token::Divide); }
         else if cur_slice.starts_with("&&") { tokens.push(Token::BoolAnd); current += 1; }
         else if cur_slice.starts_with("||") { tokens.push(Token::BoolOr); current += 1; }
+        else if cur_slice.starts_with("!=") { tokens.push(Token::NotEquals); current += 1; }
         else if cur_slice.starts_with("!") { tokens.push(Token::BoolNot);}
         else if cur_slice.starts_with("&") { tokens.push(Token::Concat); }
+        else if cur_slice.starts_with(">=") { tokens.push(Token::GreaterEqual); current += 1; }
+        else if cur_slice.starts_with("<=") { tokens.push(Token::LessEqual); current += 1; }
+        else if cur_slice.starts_with(">") { tokens.push(Token::Greater); }
+        else if cur_slice.starts_with("<") { tokens.push(Token::Less); }
         else if cur_slice.starts_with("[") { tokens.push(Token::OpenBracket); }
         else if cur_slice.starts_with("]") { tokens.push(Token::CloseBracket); }
         else if cur_slice.starts_with("(") { tokens.push(Token::OpenParen); }
