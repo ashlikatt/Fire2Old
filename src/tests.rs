@@ -1,10 +1,8 @@
 #[cfg(test)]
 use crate::tokenizer;
+use crate::parser;
 
-
-#[test]
-fn test_tokenizer() {
-    let tests = [ r"
+const TESTS: &'static [&str] = &[ r"
     fn average(a: Num, b: Num): Num {
         set = (a+b)/2;
     }
@@ -38,7 +36,17 @@ fn test_tokenizer() {
     }
     "# ];
 
-    for t in tests {
+
+#[test]
+fn test_tokenizer() {
+    for t in TESTS {
         println!("{}\n{:?}\n", t, tokenizer::tokenizer(t));
+    }
+}
+
+#[test]
+fn test_parser() {
+    for t in TESTS {
+        println!("{}\n{:?}\n", t, parser::parse_tokens(&tokenizer::tokenizer(t).unwrap()));
     }
 }

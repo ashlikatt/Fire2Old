@@ -1,5 +1,6 @@
 use lazy_static::lazy_static;
 use regex::Regex;
+use crate::compiler;
 
 #[derive(Debug)]
 pub enum Token {
@@ -65,12 +66,7 @@ pub enum Token {
         CloseParen, // ) -> Function calls, definitions, and used in math
 }
 
-#[derive(Debug)]
-pub enum CompileError {
-    InvalidNum{ loc: usize },
-}
-
-pub fn tokenizer(code: &str) -> Result<Vec<Token>, CompileError> {
+pub fn tokenizer(code: &str) -> Result<Vec<Token>, compiler::CompileError> {
     lazy_static! {  // This will initialize the vars only once
         static ref IDENTIFIER_REGEX: Regex = Regex::new(r"^([a-zA-Z][a-zA-Z0-9_]*)").unwrap();
         static ref ANNOTATION_REGEX: Regex = Regex::new(r"^@([a-zA-Z][a-zA-Z0-9_]*)").unwrap();
@@ -134,14 +130,14 @@ pub fn tokenizer(code: &str) -> Result<Vec<Token>, CompileError> {
         }
         else if let Some(t) = INT_REGEX.find(cur_slice) {
             tokens.push(
-                Token::Int(str::parse::<i64>(t.as_str()).ok().ok_or(CompileError::InvalidNum{loc: current})? // If it's valid, push, otherwise return an error.
+                Token::Int(str::parse::<i64>(t.as_str()).ok().ok_or(compiler::CompileError{ error_type: compiler::ErrorType::InvalidNumError, location: current })? // If it's valid, push, otherwise return an error.
             ));
             current += t.as_str().len();
             continue;
         }
         else if let Some(t) = NUM_REGEX.find(cur_slice) {
             tokens.push(
-                Token::Number(str::parse::<f64>(t.as_str()).ok().ok_or(CompileError::InvalidNum{loc: current})? // If it's valid, push, otherwise return an error.
+                Token::Number(str::parse::<f64>(t.as_str()).ok().ok_or(compiler::CompileError{ error_type: compiler::ErrorType::InvalidNumError, location: current })? // If it's valid, push, otherwise return an error.
             ));
             current += t.as_str().len();
             continue;
