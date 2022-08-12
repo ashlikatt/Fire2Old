@@ -1,0 +1,2 @@
+@Compile("PLAYER ACTION","SendMessage","","SELECTION",{},s);
+fn sendMessage(s: String);

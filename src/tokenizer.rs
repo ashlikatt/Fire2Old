@@ -81,7 +81,7 @@ pub fn tokenizer(code: &str) -> Result<Vec<Token>, compiler::CompileError> {
     while current<code.len() { // Loops until no more left. current = current char being looked at.
         let cur_slice = &code[current..];
         if cur_slice.starts_with("=") { tokens.push(Token::Assign); }
-        else if cur_slice.starts_with("==") { tokens.push(Token::Equals); current += 1; }
+        if cur_slice.starts_with("==") { tokens.push(Token::Equals); current += 1; }
         else if cur_slice.starts_with("true") { tokens.push(Token::True); current += 3; }
         else if cur_slice.starts_with("false") { tokens.push(Token::False); current += 4; }
         else if cur_slice.starts_with(";") { tokens.push(Token::Semicolon); }
