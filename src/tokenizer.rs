@@ -82,8 +82,6 @@ pub fn tokenizer(code: &str) -> Result<Vec<Token>, compiler::CompileError> {
         let cur_slice = &code[current..];
         if cur_slice.starts_with('=') { tokens.push(Token::Assign); }
         if cur_slice.starts_with("==") { tokens.push(Token::Equals); current += 1; }
-        else if cur_slice.starts_with("true") { tokens.push(Token::True); current += 3; }
-        else if cur_slice.starts_with("false") { tokens.push(Token::False); current += 4; }
         else if cur_slice.starts_with(';') { tokens.push(Token::Semicolon); }
         else if cur_slice.starts_with("::") { tokens.push(Token::Relation); current += 1; }
         else if cur_slice.starts_with(':') { tokens.push(Token::TypeDef); current += 1; }
@@ -109,17 +107,6 @@ pub fn tokenizer(code: &str) -> Result<Vec<Token>, compiler::CompileError> {
         else if cur_slice.starts_with('{') { tokens.push(Token::OpenBrace); }
         else if cur_slice.starts_with('}') { tokens.push(Token::CloseBrace); }
         else if cur_slice.starts_with(',') { tokens.push(Token::Separator); }
-        else if cur_slice.starts_with("let") { tokens.push(Token::VarDef); current += 2; }
-        else if cur_slice.starts_with("fn") { tokens.push(Token::FunctionDef); current += 1; }
-        else if cur_slice.starts_with("proc") { tokens.push(Token::ProcessDef); current += 3; }
-        else if cur_slice.starts_with("if") { tokens.push(Token::If); current += 1; }
-        else if cur_slice.starts_with("for") { tokens.push(Token::For); current += 2; }
-        else if cur_slice.starts_with("while") { tokens.push(Token::While); current += 4; }
-        else if cur_slice.starts_with("select") { tokens.push(Token::Select); current += 5; }
-        else if cur_slice.starts_with("return") { tokens.push(Token::Return); current += 5; }
-        else if cur_slice.starts_with("break") { tokens.push(Token::Break); current += 4; }
-        else if cur_slice.starts_with("continue") { tokens.push(Token::Continue); current += 7; }
-        else if cur_slice.starts_with("self") { tokens.push(Token::SelfType); current += 3; }
         else if let Some(t) = STRING_REGEX.captures(cur_slice) {
             handle_string(t, &mut current, &mut tokens);
             continue;
@@ -144,8 +131,24 @@ pub fn tokenizer(code: &str) -> Result<Vec<Token>, compiler::CompileError> {
         }
         else if cur_slice.starts_with('.') { tokens.push(Token::Dot); }
         else if let Some(t) = IDENTIFIER_REGEX.find(cur_slice) {
-            tokens.push(Token::Identifier(t.as_str().to_string()));
-            current += t.as_str().len();
+            let s = t.as_str();
+            tokens.push(match s {
+                "true" => Token::True,
+                "false" => Token::False,
+                "let" => Token::VarDef,
+                "fn" => Token::FunctionDef,
+                "proc" => Token::ProcessDef,
+                "if" => Token::If,
+                "for" => Token::For,
+                "while" => Token::While,
+                "select" => Token::Select,
+                "return" => Token::Return,
+                "break" => Token::Break,
+                "continue" => Token::Continue,
+                "self" => Token::SelfType,
+                e => Token::Identifier(e.to_string())
+            });
+            current += s.len();
             continue;
         }
         else if let Some(t) = ANNOTATION_REGEX.captures(cur_slice) {
