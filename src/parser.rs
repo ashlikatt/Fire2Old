@@ -53,10 +53,10 @@ pub enum CodeExpression<'a> { // All sub-expressions will last as long as this o
 }
 
 pub fn parse_tokens(tokens: &Vec<Token>) -> Result<Program, compiler::CompileError> {
-    let mut iter = tokens.into_iter().peekable();
-    let mut program = Program { functions: Vec::new(), processes: Vec::new() };
+    let mut iter = tokens.iter().peekable();
+    let program = Program { functions: Vec::new(), processes: Vec::new() };
 
-    while let Some(t) = iter.next() {
+    for t in iter {
         match t {
             Token::VarDef => todo!(),
             Token::FunctionDef => todo!(),

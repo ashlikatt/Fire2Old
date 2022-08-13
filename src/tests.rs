@@ -2,7 +2,8 @@
 use crate::tokenizer;
 use crate::parser;
 
-const TESTS: &'static [&str] = &[ r"
+
+const TESTS: &[&str] = &[ r"
     fn average(a: Num, b: Num): Num {
         set = (a+b)/2;
     }

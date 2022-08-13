@@ -80,35 +80,35 @@ pub fn tokenizer(code: &str) -> Result<Vec<Token>, compiler::CompileError> {
     let mut current: usize = 0;
     while current<code.len() { // Loops until no more left. current = current char being looked at.
         let cur_slice = &code[current..];
-        if cur_slice.starts_with("=") { tokens.push(Token::Assign); }
+        if cur_slice.starts_with('=') { tokens.push(Token::Assign); }
         if cur_slice.starts_with("==") { tokens.push(Token::Equals); current += 1; }
         else if cur_slice.starts_with("true") { tokens.push(Token::True); current += 3; }
         else if cur_slice.starts_with("false") { tokens.push(Token::False); current += 4; }
-        else if cur_slice.starts_with(";") { tokens.push(Token::Semicolon); }
+        else if cur_slice.starts_with(';') { tokens.push(Token::Semicolon); }
         else if cur_slice.starts_with("::") { tokens.push(Token::Relation); current += 1; }
-        else if cur_slice.starts_with(":") { tokens.push(Token::TypeDef); current += 1; }
+        else if cur_slice.starts_with(':') { tokens.push(Token::TypeDef); current += 1; }
         else if cur_slice.starts_with("++") { tokens.push(Token::Increment); current += 1; }
         else if cur_slice.starts_with("--") { tokens.push(Token::Decrement); current += 1; }
-        else if cur_slice.starts_with("+") { tokens.push(Token::Sum); }
-        else if cur_slice.starts_with("-") { tokens.push(Token::Minus); }
-        else if cur_slice.starts_with("*") { tokens.push(Token::Multiply); }
-        else if cur_slice.starts_with("/") { tokens.push(Token::Divide); }
+        else if cur_slice.starts_with('+') { tokens.push(Token::Sum); }
+        else if cur_slice.starts_with('-') { tokens.push(Token::Minus); }
+        else if cur_slice.starts_with('*') { tokens.push(Token::Multiply); }
+        else if cur_slice.starts_with('/') { tokens.push(Token::Divide); }
         else if cur_slice.starts_with("&&") { tokens.push(Token::BoolAnd); current += 1; }
         else if cur_slice.starts_with("||") { tokens.push(Token::BoolOr); current += 1; }
         else if cur_slice.starts_with("!=") { tokens.push(Token::NotEquals); current += 1; }
-        else if cur_slice.starts_with("!") { tokens.push(Token::BoolNot);}
-        else if cur_slice.starts_with("&") { tokens.push(Token::Concat); }
+        else if cur_slice.starts_with('!') { tokens.push(Token::BoolNot);}
+        else if cur_slice.starts_with('&') { tokens.push(Token::Concat); }
         else if cur_slice.starts_with(">=") { tokens.push(Token::GreaterEqual); current += 1; }
         else if cur_slice.starts_with("<=") { tokens.push(Token::LessEqual); current += 1; }
-        else if cur_slice.starts_with(">") { tokens.push(Token::Greater); }
-        else if cur_slice.starts_with("<") { tokens.push(Token::Less); }
-        else if cur_slice.starts_with("[") { tokens.push(Token::OpenBracket); }
-        else if cur_slice.starts_with("]") { tokens.push(Token::CloseBracket); }
-        else if cur_slice.starts_with("(") { tokens.push(Token::OpenParen); }
-        else if cur_slice.starts_with(")") { tokens.push(Token::CloseParen); }
-        else if cur_slice.starts_with("{") { tokens.push(Token::OpenBrace); }
-        else if cur_slice.starts_with("}") { tokens.push(Token::CloseBrace); }
-        else if cur_slice.starts_with(",") { tokens.push(Token::Separator); }
+        else if cur_slice.starts_with('>') { tokens.push(Token::Greater); }
+        else if cur_slice.starts_with('<') { tokens.push(Token::Less); }
+        else if cur_slice.starts_with('[') { tokens.push(Token::OpenBracket); }
+        else if cur_slice.starts_with(']') { tokens.push(Token::CloseBracket); }
+        else if cur_slice.starts_with('(') { tokens.push(Token::OpenParen); }
+        else if cur_slice.starts_with(')') { tokens.push(Token::CloseParen); }
+        else if cur_slice.starts_with('{') { tokens.push(Token::OpenBrace); }
+        else if cur_slice.starts_with('}') { tokens.push(Token::CloseBrace); }
+        else if cur_slice.starts_with(',') { tokens.push(Token::Separator); }
         else if cur_slice.starts_with("let") { tokens.push(Token::VarDef); current += 2; }
         else if cur_slice.starts_with("fn") { tokens.push(Token::FunctionDef); current += 1; }
         else if cur_slice.starts_with("proc") { tokens.push(Token::ProcessDef); current += 3; }
@@ -142,7 +142,7 @@ pub fn tokenizer(code: &str) -> Result<Vec<Token>, compiler::CompileError> {
             current += t.as_str().len();
             continue;
         }
-        else if cur_slice.starts_with(".") { tokens.push(Token::Dot); }
+        else if cur_slice.starts_with('.') { tokens.push(Token::Dot); }
         else if let Some(t) = IDENTIFIER_REGEX.find(cur_slice) {
             tokens.push(Token::Identifier(t.as_str().to_string()));
             current += t.as_str().len();
