@@ -31,6 +31,7 @@ pub enum Token {
             Minus, // - -> Subtracts two nums. The first is assumed to be 0 if no previous number is present.
             Multiply, // * -> Multiplies two nums.
             Divide, // / -> Divides two nums. If both are ints then the result is rounded down.
+            Modulo, // / -> Modulos two ints.
             Assign, // = -> Sets a variable to a value
             Concat, // & -> Concatenates two values
         // Boolean
@@ -91,6 +92,7 @@ pub fn tokenizer(code: &str) -> Result<Vec<Token>, compiler::CompileError> {
         else if cur_slice.starts_with('-') { tokens.push(Token::Minus); }
         else if cur_slice.starts_with('*') { tokens.push(Token::Multiply); }
         else if cur_slice.starts_with('/') { tokens.push(Token::Divide); }
+        else if cur_slice.starts_with('%') { tokens.push(Token::Modulo); }
         else if cur_slice.starts_with("&&") { tokens.push(Token::BoolAnd); current += 1; }
         else if cur_slice.starts_with("||") { tokens.push(Token::BoolOr); current += 1; }
         else if cur_slice.starts_with("!=") { tokens.push(Token::NotEquals); current += 1; }
