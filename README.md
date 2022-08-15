@@ -8,7 +8,7 @@ Fire is a language specifically designed to compile down to DiamondFire (mcdiamo
 Fire is designed to provide conviences not currently present on DiamondFire, such as:
 1. Type checking 
 2. Function parameters (+ Scoped variables)
-3. Booleans, Arrays, and Structs
+3. Booleans, Arrays, Structs, and Enums.
 4. Nicer selection handling and manipulation
 5. Native events for plot initialization, startup, and tick.
 6. Module / Library support
@@ -18,11 +18,11 @@ Fire is designed to provide conviences not currently present on DiamondFire, suc
 To begin programming with Fire, just like DiamondFire, an event must first be created.
 Unlike DiamondFire, events are not a standalone element in a program, instead a process must be created and "subscribed" to the event.
 This can be done like this:
-```
+```rs
 // This is a comment!
 
 // Create process "joinGame" and have it called on the Join Event
-proc joinGame -> JoinGameEvent {
+proc joinGame(e: JoinEvent) {
   // Event code here!
 }
 ```
@@ -32,28 +32,28 @@ The main benefit of this is it will allow multiple pieces of code to all use the
 
 
 Here is code to show how you would go about adding a simple join message.
-```
-proc joinGame -> JoinGameEvent {
-  ALL::sendMessage(default & " joined!");
+```rs
+proc joinGame(e: JoinEvent) {
+  ALL::sendMessage(e.default & " joined!");
 }
 ```
 A few basic things are happening here.
-First of all, the `sendMessage` function requires a "Selection Parameter". We use the `ALL` keyword to refer to all players.
+We use the `ALL` keyword to refer to all players.
 Secondly, the `&` here is the concatenation operator, most languages omit this in favor of using a `+`, however it removes ambiguity when you're operating on two variables with unknown types.
 
 
 
 Final example here, this will cover variables and functions.
-```
-SAVE totalJoins: Int = 0     
-// A SAVEd variable is created here, any time this varname appears in the future, it will be SAVEd.
+```rs
+@Save totalJoins: Int = 0     
+// A SAVEd variable is created here using the @Save annotation, any time this varname appears in the future, it will be SAVEd.
 // "totalJoins = 0" will implicitly be called on the "Initialize" event (Called after a varpurge)
                         
 totalSessionJoins: Int = 0   
 // A DEFAULT variable is created here, any time this varname appears in the future, it will be DEFAULT.
 // "totalSessionJoins = 0" will implicity be called on the "Startup" event (Called when someone joins while nobody else is online)
 
-proc joinGame -> JoinGameEvent {
+proc joinGame(e: JoinEvent) {
   playerID: Int = totalJoins 
   // A scoped variable is created here. These are local to the function they are inside of (this supports recursion)
   // This variable is also typed to be an Int. Fire will prevent compilation if this variable is assigned anything other than this type.
