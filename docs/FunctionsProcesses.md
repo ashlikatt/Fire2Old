@@ -19,7 +19,7 @@ A function can be called like this: `myFunc()`, quite simple.
 
 ### Parameters
 ---
-Using a function like this, however, is not incredibly useful apart from splitting up your code. We can give more functionality by adding *parameters*.
+Using a function like before, however, is not incredibly useful outside of splitting up your code. We can give more functionality by adding *parameters*.
 ```rs
 // Returns the larger of the two numbers
 fn max(a: Num, b: Num) {
@@ -35,35 +35,18 @@ You would call such a function with something such as: `max(2, 3)`.
 Fire supports returning values from functions!
 
 Let's return to our previous `max` function and give it output! 
-We're going to use the special `Var<T>` type to accept a variable that we can modify.
-Let's implement its body while we're at it!
+We can give a type to the whole function to give it a return type.
 ```rs
-fn max(out: Var<Int>, a: Num, b: Num) {
+fn max(a: Num, b: Num): Num {
     if (a > b) {
-        out = a; // "a" is the correct type, okay!
+        return a; // "a" is the correct type, okay!
     } else {
-        out = b; // "b" is the correct type, okay!
+        return b; // "b" is the correct type, okay!
     }
 }
 ```
 Now we have a working function! 
-We instead call it like so: `max(var, 2, 3)`.
-
-The reason this works is `Var<T>` is a special type. A variable (of type T) must be passed into it. However, instead of using the variable's value, the variable itself is passed, and can hence be set or modified.
-
-### Selection Parameters
----
-A Selection Parameter is used whenever a function might need to be able to run on various players/entities. They can be declared by prefixing the function with a `*`:
-```rs
-fn *startingGear() {
-    // Implicitly use SELECTION::giveItems(...)
-    giveItems(createItem("iron_sword")); 
-}
-```
-That's really about it. If a function is not marked as needing a selection parameter, then that function cannot use `SELECTION`. This prevents the function from calling things such as giveItem or sendMessage unless using an explicit, known selector, such as `ALL`.
-
-Something to note, is Selections are local to a function / process in Fire.
-While they can still be manipulated like normal, a function has no information about the caller's selection unless the caller passes `SELECTION`. (In this case that could look like `SELECTION::startingGear()`)
+We instead call it like so: `max(2, 3)`. Or, more relevantly, `var = max(2, 3)`.
 
 
 
@@ -76,7 +59,7 @@ Processes are very different than functions in many ways.
 2. A process is its own thread and runs independently of others
 3. A process can be subscribed to an event, while a function cannot.
 
-Those are the main differences. A process can still accept both regular parameters and selection parameters.
+Those are the main differences. A process can still accept parameters.
 
 They're defined with the `proc` keyword.
 Here is an extremely simple example:
@@ -85,21 +68,25 @@ proc myProcess() {
 
 }
 ```
+You would call it like so `myProcess()`
 
 One of the main uses of processes is for listening to events. 
-To make a process run when an event is triggered, its only parameter must be a valid event, some events will require the process to accept a selection parameter, and others will forbid it.
+To make a process run when an event is triggered, its only parameter must be a valid event.
 
 Here is an example:
 ```rs
-proc *joinEvent(e: JoinEvent) {
+proc joinEvent(e: JoinEvent) {
 
 }
 ```
 This process will be triggered whenever a player joins the plot.
+An event-subscribed process can still be called just like a normal process, given that you provide a valid JoinEvent input.
+Additionally, you can have multiple of the same event in a program, this is important for certain libraries.
+(As it stands, there is no way to assign a "priority" to event calls, however it shouldn't matter in well-written code)
 
 ### Special Events
 Fire has some built-in events that DiamondFire does not for convienence.
 These are:
-1. `InitializeEvent` - Runs when the plot starts for the first time / after a varpurge. This event initialized all SAVEd variables.
-2. `StartupEvent` - Runs when a player joins while no others are online, AKA when you plot starts up. This event initializes all DEFAULT variables.
+1. `InitializeEvent` - Runs when the plot starts for the first time / after a varpurge. This event initialized all @Saved variables.
+2. `StartupEvent` - Runs when a player joins while no others are online, AKA when you plot starts up. This event initializes all global variables.
 3. `TickEvent` - Runs every tick.
