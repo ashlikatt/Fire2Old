@@ -1,22 +1,34 @@
 # Annotations
-Annotations are used to signal information to the compiler. They are intended for internal use and are not recommended to be used outside of the standard library.
+Annotations are used to signal extra information to the compiler / IDE. They don't exist in compiled code.
 
-An annotation can be added before a function, process, struct, etc. (Any sort of declaration)
+An annotation can be added before a function, process, struct, enum, var declaration, etc. (Any sort of declaration)
+
+
+## Safe Annotations
+These can safely be used.
+
+### @Save
+---
+Used before a top-level variable declaration to mark it as being a saved variable. 
 
 
 
-## @Event
+## Dangerous Annotations
+These can seriously break code if used incorrectly. Intended for internal use.
+
+
+### @Event
 ---
 Used before a struct definition to mark it as being an Event.
 
-`@Event(type: String, name: String, args: String...)`
+`@Event(type: String, name: String, args: Dictionary<String>)`
 1. type - The type of event as it appears on the sign. ("PLAYER EVENT", "ENTITY EVENT", etc)
 2. name - The name of the event as it appears on the sign. ("Join", "RightClick", etc)
-3. args - List of Game Values to be supplied to the constructor when the event is called. ("Event Block Side", "Event Command", etc. `/i tag list` on a Game Value for more information)
+3. args - Dict of Game Values to build the struct when the event is called. ("Event Block Side", "Event Command", etc. Use `/i tag list` on a Game Value for more information). All struct values must be supplied.
 
 Example stdlib:
 ```java
-@Event("PLAYER EVENT", "Command", "Event Command", "Event Command Arguments")
+@Event("PLAYER EVENT", "Command", {command: "Event Command", arguments: "Event Command Arguments"})
 struct CommandEvent {
     command: String,
     arguments: List<String>
@@ -25,19 +37,23 @@ struct CommandEvent {
 
 
 
-## @Compile
+### @Compile
 ---
 Used before a function or process definition to override how it is compiled into DiamondFire.
 
-`@Compile(a: String, b: String, c: String, d: String, chest: Any...)`
-1. a - Top line of sign, this determines block type.
-2. b - Second line of sign.
-3. c - Third line of sign.
-4. d - Fourth line of sign.
-5. chest - Values to put in the chest. Can parse Strings, numbers, variables, etc
+`@Compile(blocks: List<std.compile.CodeBlock>)`
+1. blocks - CodeBlocks to place instead of a regular call / definition.
 
 Example stdlib:
 ```java
 @Compile("SET VARIABLE","Average","","",v,n)
 fn average(v: Var<Number>, n: Number...) {} // No code needed
 ```
+
+
+
+### @ValueItem
+---
+Used before a struct to mark a type as being able to convert to a DF item, and define how to do so.
+
+`@ValueItem()` TODO
