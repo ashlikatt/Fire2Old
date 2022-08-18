@@ -3,7 +3,7 @@ program         = { import }, { definition };
 import          = 'import', identifier, [ 'as', identifier ], end;
 
 
-definition      = function | process | vardef | struct | enum | trait;
+definition      = con_function | process | vardef | struct | enum | trait;
 function        = con_function | abs_function;
 con_function    = { annotation }, 'fn', identifier, param_def_list, [ ':', type ], code_block;
 abs_function    = { annotation }, 'fn', identifier, param_def_list, [ ':', type ], end;
