@@ -1,0 +1,56 @@
+program         = { import }, { definition };
+ 
+import          = 'import', identifier, [ 'as', identifier ], end;
+
+
+definition      = function | process | vardef | struct | enum | trait;
+function        = con_function | abs_function;
+con_function    = { annotation }, 'fn', identifier, param_def_list, [ ':', type ], code_block;
+abs_function    = { annotation }, 'fn', identifier, param_def_list, [ ':', type ], end;
+process         = { annotation }, 'proc', identifier, param_def_list, code_block;
+vardef          = { annotation }, 'let', var_any_set, end;
+struct          = { annotation }, 'struct', type, [':', type, {',', type}, [',']], '{', [ var_typed, { ',', var_typed }, [','] ], { function }, '}'; 
+enum            = { annotation }, 'enum', type, [ ':', type ], '{', [ var_set, { ',', var_set }, [','] ], '}'; 
+trait           = { annotation }, 'trait', type, '{', { function }, '}';
+ 
+end             = ';' | '\n';
+annotation      = '@', type;
+var             = identifier;
+var_typed       = var, ':', type;
+var_any_set     = var_set | var_typed_set;
+var_set         = var, '=', expression;
+var_typed_set   = var_typed, '=', expression;
+ 
+code_block      = statement | '{', { statement }, '}';
+statement       = flow | control | vardef | assignment;
+assignment      = identifier, assop, expression, end;
+control         = 'break', end | 'continue', end | 'return', expression, end;
+flow            = if | while | for;
+if              = 'if', '(', expression, ')', code_block;
+while           = 'while', '(', expression, ')', code_block;
+for             = 'for', '(', identifier, 'in', expression ')', code_block;
+ 
+expression      = andcheck, [ '||', expression ];
+andcheck        = equalcheck, [ '&&', expression ];
+equalcheck      = comparison, [ eqop, expression ];
+comparson       = sum, [ compop, expression ];
+sum             = term, [ addop, expression ];
+term            = accessor, [ mulop, expression ];
+accessor        = [ '!' ] exprvalue, [ accop ];
+exprvalue       = "(", expression, ")" | NUMBER | STRING | BOOLEAN | initialize | raw_dict | raw_list;
+ 
+accop           = '[' + expression + ']' | '.' | param_list;
+compop          = '>' | '<' | '>=' | '<=';
+eqop            = '==' | '!=';
+mulop           = '*' | '/' | '%';
+assop           = '=' | '+=' | '-=' | '*=' | '/=' | '%=';
+ 
+identifier      = ? likeThis ?;
+type            = ? LikeThis ?;
+
+initialize      = type, param_list;
+raw_dict        =;
+raw_list        =;
+
+param_list      = "(", [ expression, { ',', expression }, [ ',' ] ], + ")";
+param_def_list  = "(", [ ( var_set | var_typed_set ), { ',', (var_set | var_typed_set) }, [ ',' ] ], ")";

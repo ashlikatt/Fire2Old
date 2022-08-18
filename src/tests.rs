@@ -1,6 +1,7 @@
 #[cfg(test)]
 use crate::tokenizer;
 use crate::parser;
+use formatted_debug::table_formatting::StringTable;
 
 
 const TESTS: &[&str] = &[ r"
@@ -41,13 +42,17 @@ const TESTS: &[&str] = &[ r"
 #[test]
 fn test_tokenizer() {
     for t in TESTS {
-        println!("{}\n{:?}\n", t, tokenizer::tokenizer(t));
+        let mut tokens = tokenizer::tokenizer(t).unwrap();
+        let table: Vec<String> = tokens.iter().map(|f| {
+            format!("{:?}", f)
+        }).collect();
+        println!("{}", table.to_table().join("\n"));
     }
 }
 
 #[test]
 fn test_parser() {
     for t in TESTS {
-        println!("{}\n{:?}\n", t, parser::parse_tokens(&tokenizer::tokenizer(t).unwrap()));
+        //println!("{}\n{:?}\n", t, parser::parse_tokens(&tokenizer::tokenizer(t).unwrap()));
     }
 }

@@ -2,35 +2,42 @@ use crate::tokenizer::Token;
 use crate::compiler;
 
 #[derive(Debug)]
-pub struct Program<'a> {
-    functions: Vec<CodeFunction<'a>>,
-    processes: Vec<CodeProcess<'a>>,
+pub enum Path {
+    Absolute(Vec<String>), // ex: ["std", "selections", "Selection", "DEFAULT"]. If the specified var/fun/whatever isn't found, that's an error.
+    Relative(String),      // ex: "myVar". If it's not found, it will look "up" one scope, and keep doing this until top-level, if not found it will check
+                           //     stdlib, if STILL not found, that's an error.
 }
 
 #[derive(Debug)]
-pub struct CodeFunction<'a> {
-    name: String,
+pub struct Program {
+    functions: Vec<CodeFunction>,
+    processes: Vec<CodeProcess>,
+}
+
+#[derive(Debug)]
+pub struct CodeFunction {
+    location: Path,
     parameters: Vec<CodeVar>,
-    body: CodeBlock<'a>
+    body: CodeBlock
 }
 
 #[derive(Debug)]
-pub struct CodeProcess<'a> {
-    name: String,
+pub struct CodeProcess {
+    location: Path,
     parameters: Vec<CodeVar>,
-    body: CodeBlock<'a>
+    body: CodeBlock
 }
 
 #[derive(Debug)]
-pub struct CodeBlock<'a> {
-    statements: Vec<CodeStatement<'a>>
+pub struct CodeBlock {
+    statements: Vec<CodeStatement>
 }
 
 #[derive(Debug)]
-pub enum CodeStatement<'a> {
-    If { condition: CodeExpression<'a, bool>, if_true: CodeBlock<'a>, if_false: Option<CodeBlock<'a>> },
-    While { condition: CodeExpression<'a, bool>, block: CodeBlock<'a> },
-    VarInit { var: CodeVar, value: Option<CodeExpression<'a, CodeType>> },
+pub enum CodeStatement {
+    If { condition: CodeExpression<bool>, if_true: CodeBlock, if_false: Option<CodeBlock> },
+    While { condition: CodeExpression<bool>, block: CodeBlock },
+    VarInit { var: CodeVar, value: Option<CodeExpression<CodeType>> },
 }
 
 #[derive(Debug)]
@@ -51,25 +58,25 @@ enum AnyNum {
 }
 
 #[derive(Debug)]
-pub enum CodeExpression<'a, T> { // All sub-expressions will last as long as this one.
+pub enum CodeExpression<T> { // All sub-expressions will last as long as this one.
     Raw(T),
 
-    Sum(&'a CodeExpression<'a, AnyNum>, &'a CodeExpression<'a, AnyNum>),
-    Difference(&'a CodeExpression<'a, AnyNum>, &'a CodeExpression<'a, AnyNum>),
-    Negate(&'a CodeExpression<'a, AnyNum>),
-    Product(&'a CodeExpression<'a, AnyNum>, &'a CodeExpression<'a, AnyNum>),
-    Quotient(&'a CodeExpression<'a, AnyNum>, &'a CodeExpression<'a, AnyNum>),
-    Modulo(&'a CodeExpression<'a, AnyNum>, &'a CodeExpression<'a, AnyNum>),
-    Concat(&'a CodeExpression<'a, String>, &'a CodeExpression<'a, String>),
-    And(&'a CodeExpression<'a, bool>, &'a CodeExpression<'a, bool>),
-    Or(&'a CodeExpression<'a, bool>, &'a CodeExpression<'a, bool>),
-    Not(&'a CodeExpression<'a, bool>),
-    Greater(&'a CodeExpression<'a, bool>, &'a CodeExpression<'a, bool>),
-    Less(&'a CodeExpression<'a, bool>, &'a CodeExpression<'a, bool>),
-    GreaterEquals(&'a CodeExpression<'a, bool>, &'a CodeExpression<'a, bool>),
-    LessEquals(&'a CodeExpression<'a, bool>, &'a CodeExpression<'a, bool>),
-    Equals(&'a CodeExpression<'a, bool>, &'a CodeExpression<'a, bool>),
-    NotEquals(&'a CodeExpression<'a, bool>, &'a CodeExpression<'a, bool>),
+    Sum(Box<CodeExpression<AnyNum>>, Box<CodeExpression<AnyNum>>),
+    Difference(Box<CodeExpression<AnyNum>>, Box<CodeExpression<AnyNum>>),
+    Negate(Box<CodeExpression<AnyNum>>),
+    Product(Box<CodeExpression<AnyNum>>, Box<CodeExpression<AnyNum>>),
+    Quotient(Box<CodeExpression<AnyNum>>, Box<CodeExpression<AnyNum>>),
+    Modulo(Box<CodeExpression<AnyNum>>, Box<CodeExpression<AnyNum>>),
+    Concat(Box<CodeExpression<String>>, Box<CodeExpression<String>>),
+    And(Box<CodeExpression<bool>>, Box<CodeExpression<bool>>),
+    Or(Box<CodeExpression<bool>>, Box<CodeExpression<bool>>),
+    Not(Box<CodeExpression<bool>>),
+    Greater(Box<CodeExpression<bool>>, Box<CodeExpression<bool>>),
+    Less(Box<CodeExpression<bool>>, Box<CodeExpression<bool>>),
+    GreaterEquals(Box<CodeExpression<bool>>, Box<CodeExpression<bool>>),
+    LessEquals(Box<CodeExpression<bool>>, Box<CodeExpression<bool>>),
+    Equals(Box<CodeExpression<bool>>, Box<CodeExpression<bool>>),
+    NotEquals(Box<CodeExpression<bool>>, Box<CodeExpression<bool>>),
 }
 
 macro_rules! expect_token {
@@ -97,20 +104,5 @@ pub fn parse_program(tokens: &Vec<Token>) -> Result<Program, compiler::CompileEr
     };
 
     Ok(program)
-}
-
-fn parse_var_definition<I: Iterator<Item = Token>>(iter: &mut I) -> Result<CodeStatement, compiler::ErrorType> {
-    expect_token!(iter, Token::VarDef)?;
-    let name = match iter.next().ok_or(compiler::ErrorType::InvalidTokenError)? {
-        Token::Identifier(t) => t,
-        _ => return Err(compiler::ErrorType::InvalidTokenError),
-    };
-    expect_token!(iter, Token::Equals)?;
-    let value = parse_expression(iter);
-    // smth
-}
-
-fn parse_expression<I: Iterator<Item = Token>>(iter: &mut I) -> Result<CodeStatement, compiler::ErrorType> {
-
 }
 
