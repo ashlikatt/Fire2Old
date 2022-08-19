@@ -36,7 +36,93 @@ const TESTS: &[&str] = &[ r"
     fn giveGear() {
         TARGET::giveItems(GEAR_SWORD);
     }
-    "# ];
+    "#, r#"
+    import something
+    import something2 as s2;
+
+    @Save
+    let allPlayers = Set<UUID>();
+
+    fn func1() return 2;
+
+    @Unsafe
+    fn func2(a: Num, b: Num = 0): Int {
+        let c = 2                           // a is type Int
+        let d: Num = 1;
+
+        if (c > a || c > b) c = a;
+        else if (d > a) d = a;
+        else a = c + d;
+
+        return a + b * c / d;
+    }
+
+    fn func3(a: List<Num>): Num {
+        let smallest = 0;
+        for (elem in a)
+            if (elem > smallest)
+                smallest = elem;
+        return smallest;
+    }
+
+
+
+    trait Iterator<T> {
+        fn hasNext(self): bool;
+        fn next(self): T;
+    }
+
+    @Iterator(/* Stuff~! */)
+    struct Grid : Iterator<Loc> {
+        curX: Int = startX,
+        curY: Int = startY,
+        curZ: Int = startZ,
+        startX: Int,
+        startY: Int,
+        startZ: Int,
+        endX: Int,
+        endY: Int,
+        endZ: Int
+
+        fn hasNext(self): bool {
+            return self.curX<self.endX && self.curY<self.endY && self.curZ<self.endZ;
+        }
+
+        fn next(self): Loc {
+            let out = Loc(self.curX, self.curY, self.curZ);
+            self.curX += 1;
+            if (self.curX > self.endX) {
+                self.curX = self.startX;
+                self.curY += 1;
+                if (self.curY > self.endY) {
+                    self.curY = self.startY;
+                    self.curZ += 1;
+                    if (self.curZ > self.endZ) {
+                        self.curZ = 0;
+                    }
+                }
+            }
+            return out;
+        }
+
+        fn from(a: Loc, b: Loc): Grid {
+            return Grid {
+                startX : floor(min(a.x, b.x)),
+                startY : floor(min(a.y, b.y)),
+                startZ : floor(min(a.z, b.z)),
+                endX : floor(max(a.x, b.x)),
+                endY : floor(max(a.y, b.y)),
+                endZ : floor(max(a.z, b.z))
+            }
+        }
+    }
+
+    enum Gender: String {
+        F = "Female",
+        M = "Male",
+        O = "Other",
+    }
+"#];
 
 
 #[test]

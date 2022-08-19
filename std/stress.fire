@@ -29,15 +29,15 @@ fn func3(a: List<Num>): Num {
 
 
 trait Iterator<T> {
-    fn hasNext(): bool;
-    fn next(): T;
+    fn hasNext(self): bool;
+    fn next(self): T;
 }
 
 @Iterator(/* Stuff~! */)
-struct Grid() : Iterator<Loc> {
-    curX: Int,
-    curY: Int,
-    curZ: Int
+struct Grid : Iterator<Loc> {
+    curX: Int = startX,
+    curY: Int = startY,
+    curZ: Int = startZ,
     startX: Int,
     startY: Int,
     startZ: Int,
@@ -66,17 +66,15 @@ struct Grid() : Iterator<Loc> {
         return out;
     }
 
-    // RETHINK THIS!
-    fn Grid(sX: Int, sY: Int, sZ: Int, eX: Int, eY: Int, eZ: Int) {
-        self.startX = sX;
-        self.startY = sY;
-        self.startZ = sZ;
-        self.endX = eX;
-        self.endY = eY;
-        self.endZ = eZ;
-        self.curX = self.startX;
-        self.curY = self.startY;
-        self.curZ = self.startZ;
+    fn from(a: Loc, b: Loc): Grid {
+        return Grid {
+            startX : floor(min(a.x, b.x)),
+            startY : floor(min(a.y, b.y)),
+            startZ : floor(min(a.z, b.z)),
+            endX : floor(max(a.x, b.x)),
+            endY : floor(max(a.y, b.y)),
+            endZ : floor(max(a.z, b.z))
+        }
     }
 }
 

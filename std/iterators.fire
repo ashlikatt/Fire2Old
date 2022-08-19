@@ -1,0 +1,117 @@
+trait Iterator<T> {
+    fn hasNext(self): bool;
+    fn next(self): T;
+}
+
+
+
+@Iterator(/* Stuff~! */)
+struct IntRange : Iterator<Int> {
+    start: Int,
+    cur: Int = start,
+    end: Int,
+    step: Int,
+
+    fn hasNext(self): bool {
+        return cur <= end;
+    }
+
+    fn next(self): Int {
+        if (self.hasNext()) {
+            let out = cur;
+            cur += step;
+            return out;
+        } else {
+            raise "Iterator progressed beyond maximum. Double check before calling with it.hasNext().";
+        }
+    }
+
+    fn from(a: Int, b: Int, c: Int = 1): IntRange {
+        return Range {
+            start: a,
+            end: b,
+            step: c,
+        }
+    }
+}
+
+
+@Iterator(/* Stuff~! */)
+struct Range : Iterator<Num> {
+    start: Num,
+    cur: Num = start,
+    end: Num,
+    step: Num,
+
+    fn hasNext(self): bool {
+        return cur <= end;
+    }
+
+    fn next(self): Num {
+        if (self.hasNext()) {
+            let out = cur;
+            cur += step;
+            return out;
+        } else {
+            raise "Iterator progressed beyond maximum. Double check before calling with it.hasNext().";
+        }
+    }
+
+    fn from(a: Num, b: Num, c: Num = 1): Range {
+        return Range {
+            start: a,
+            end: b,
+            step: c,
+        }
+    }
+}
+
+
+@Iterator(/* Stuff~! */)
+struct Grid : Iterator<Loc> {
+    curX: Int = startX,
+    curY: Int = startY,
+    curZ: Int = startZ,
+    startX: Int,
+    startY: Int,
+    startZ: Int,
+    endX: Int,
+    endY: Int,
+    endZ: Int
+
+    fn hasNext(self): bool {
+        return self.curX<self.endX && self.curY<self.endY && self.curZ<self.endZ;
+    }
+
+    fn next(self): Loc {
+        if (self.hasNext()) {
+            let out = Loc(self.curX, self.curY, self.curZ);
+            self.curX += 1;
+            if (self.curX > self.endX) {
+                self.curX = self.startX;
+                self.curY += 1;
+                if (self.curY > self.endY) {
+                    self.curY = self.startY;
+                    self.curZ += 1;
+                    if (self.curZ > self.endZ) {
+                        self.curZ = 0;
+                    }
+                }
+            }
+            return out;
+        } else {
+            raise "Iterator progressed beyond maximum. Double check before calling with it.hasNext().";
+        }
+    }
+
+    fn from(a: Loc, b: Loc): Grid {
+        return Grid {
+            startX : floor(min(a.x, b.x)),
+            startY : floor(min(a.y, b.y)),
+            startZ : floor(min(a.z, b.z)),
+            endX : floor(max(a.x, b.x)),
+            endY : floor(max(a.y, b.y)),
+            endZ : floor(max(a.z, b.z))
+        }
+    }
+}

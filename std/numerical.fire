@@ -1,0 +1,21 @@
+@Raw(/* Data */)
+struct Int : Add<Int, Int>, Subtract<Int, Int>, Multiply<Int, Int>, Divide<Int, Num>, Modulo<Int, Int>, Comparable<Int> {
+
+    @Compile(/* Data */)
+    fn add(self, other: Int): Int;
+
+    @Compile(/* Data */)
+    fn subtract(self, other: Int): Int;
+
+    @Compile(/* Data */)
+    fn multiply(self, other: Int): Int;
+
+    @Compile(/* Data */)
+    fn divide(self, other: Int): Num;
+
+    @Compile(/* Data */)
+    fn modulo(self, other: Int): Int;
+
+    @Compile(/* Data */)
+    fn compare(self, other: Int): Num;
+}

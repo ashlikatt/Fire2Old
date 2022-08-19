@@ -5,26 +5,28 @@ import          = 'import', identifier, [ 'as', identifier ], end;
 
 definition      = con_function | process | vardef | struct | enum | trait;
 function        = con_function | abs_function;
-con_function    = { annotation }, 'fn', identifier, param_def_list, [ ':', type ], code_block;
-abs_function    = { annotation }, 'fn', identifier, param_def_list, [ ':', type ], end;
-process         = { annotation }, 'proc', identifier, param_def_list, code_block;
+con_function    = { annotation }, 'fn', raw_identifier, [generic_dec], param_def_list, [ ':', type ], code_block;
+abs_function    = { annotation }, 'fn', raw_identifier, [generic_dec], param_def_list, [ ':', type ], end;
+process         = { annotation }, 'proc', raw_identifier, [generic_dec], param_def_list, code_block;
 vardef          = { annotation }, 'let', var_any_set, end;
-struct          = { annotation }, 'struct', type, [':', type, {',', type}, [',']], '{', [ var_typed, { ',', var_typed }, [','] ], { function }, '}'; 
-enum            = { annotation }, 'enum', type, [ ':', type ], '{', [ var_set, { ',', var_set }, [','] ], '}'; 
-trait           = { annotation }, 'trait', type, '{', { function }, '}';
+struct          = { annotation }, 'struct', raw_identifier, [':', type, {',', type}, [',']], '{', [ var_typed, { ',', var_typed }, [','] ], { function }, '}'; 
+enum            = { annotation }, 'enum', raw_identifier, [ ':', type ], '{', [ var_set, { ',', var_set }, [','] ], '}'; 
+trait           = { annotation }, 'trait', raw_identifier, '{', { function }, '}';
  
 end             = ';' | '\n';
 annotation      = '@', type;
-var             = identifier;
+var             = raw_identifier;
 var_typed       = var, ':', type;
 var_any_set     = var_set | var_typed_set;
 var_set         = var, '=', expression;
 var_typed_set   = var_typed, '=', expression;
- 
+
+generic_dec     = '<', type, [ ',', type ], [','] '>';
+
 code_block      = statement | '{', { statement }, '}';
 statement       = flow | control | vardef | assignment;
 assignment      = identifier, assop, expression, end;
-control         = 'break', end | 'continue', end | 'return', expression, end;
+control         = 'break', end | 'continue', end | 'return', expression, end | 'raise', expression, end;
 flow            = if | while | for;
 if              = 'if', '(', expression, ')', code_block;
 while           = 'while', '(', expression, ')', code_block;
@@ -45,12 +47,16 @@ eqop            = '==' | '!=';
 mulop           = '*' | '/' | '%';
 assop           = '=' | '+=' | '-=' | '*=' | '/=' | '%=';
  
-identifier      = ? likeThis ?;
-type            = ? LikeThis ?;
+identifier      = raw_identifier | reference_ident;
+raw_identifier  = ? likeThis ?;
+reference_ident = { ( raw_identifier | raw_type ), '::' }, raw_identifier;
+type            = raw_type | reference_type;
+raw_type        = ? LikeThis ?;
+reference_type  = { ( raw_identifier | raw_type ), '::' }, raw_type;
 
-initialize      = type, param_list;
-raw_dict        =;
-raw_list        =;
+initialize      = type, '{', [ identifier, ':', expression, { ',', identifier, ':', expression }, [','] ]'}';
+raw_dict        = '{', [ identifier, ':', expression, { ',', identifier, ':', expression }, [','] ]'}';
+raw_list        = '[', [ expression, { ',', expression }, [','] ]']';
 
 param_list      = "(", [ expression, { ',', expression }, [ ',' ] ], + ")";
 param_def_list  = "(", [ ( var_set | var_typed_set ), { ',', (var_set | var_typed_set) }, [ ',' ] ], ")";
