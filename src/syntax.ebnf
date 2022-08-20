@@ -32,18 +32,21 @@ if              = 'if', '(', expression, ')', code_block;
 while           = 'while', '(', expression, ')', code_block;
 for             = 'for', '(', identifier, 'in', expression ')', code_block;
  
-expression      = andcheck, [ '||', expression ];
-andcheck        = equalcheck, [ '&&', expression ];
-equalcheck      = comparison, [ eqop, expression ];
-comparson       = sum, [ compop, expression ];
-sum             = term, [ addop, expression ];
-term            = accessor, [ mulop, expression ];
-accessor        = [ '!' ] exprvalue, [ accop ];
+expression      = orcheck, [ '&', expression ];
+orcheck         = andcheck, [ '||', orcheck ];
+andcheck        = equalcheck, [ '&&', andcheck ];
+equalcheck      = comparison, [ eqop, equalcheck ];
+comparison      = sum, [ compop, comparison ];
+sum             = term, [ addop, sum ];
+term            = accessor, [ mulop, term ];
+precheck        = [ '!' ], accessor;
+accessor        = exprvalue, [ accop ];
 exprvalue       = "(", expression, ")" | NUMBER | STRING | BOOLEAN | initialize | raw_dict | raw_list;
- 
+
 accop           = '[' + expression + ']' | '.' | param_list;
 compop          = '>' | '<' | '>=' | '<=';
 eqop            = '==' | '!=';
+addop           = '+' | '-';
 mulop           = '*' | '/' | '%';
 assop           = '=' | '+=' | '-=' | '*=' | '/=' | '%=';
  

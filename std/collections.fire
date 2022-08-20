@@ -1,0 +1,10 @@
+struct Dictionary<T> : Accessible<String, T> {
+    @Precondition(keys.len() == values.len())
+    @Compile(/* Stuff~! */)
+    fn new(keys: List<String> = [], values: List<T> = []);
+}
+
+struct List<T> : Accessible<Int, T> {
+    @Compile(/* Stuff~! */)
+    fn new();
+}

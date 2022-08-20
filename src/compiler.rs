@@ -8,4 +8,5 @@ pub struct CompileError {
 pub enum ErrorType {
     InvalidNumError,
     InvalidTokenError,
+    InternalError,
 }

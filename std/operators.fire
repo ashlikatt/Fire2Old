@@ -1,26 +1,23 @@
-// Handles +
+// Handles +, -, *, /, and %
 trait Add<T, R> {
     fn add(self, other: T): R;
 }
-
-// Handles -
 trait Subtract<T, R> {
     fn subtract(self, other: T): R;
 }
-
-// Handles *
 trait Multiply<T, R> {
     fn multiply(self, other: T): R;
 }
-
-// Handles /
 trait Divide<T, R> {
     fn divide(self, other: T): R;
 }
-
-// Handles %
 trait Modulo<T, R> {
     fn modulo(self, other: T): R;
+}
+
+// Handles &
+trait Concatenate<T, R> {
+    fn concatenate(self, other: T): R;
 }
 
 // Handles ==, !=, >, <, >=, and <=
@@ -28,22 +25,21 @@ trait Comparable<T> {
     fn compare(self, other: T): Num;
 }
 
-// Handles accessing
-trait Accessible<T, R> {
-    fn access(self, key: T): R;
-    fn assign(self, key: T, val: R);
-}
-
-
-// Handles ||
+// Handles ||, &&, and !
 trait Or<T, R> {
     fn or(self, other: T): R;
 }
-// Handles &&
 trait And<T, R> {
     fn and(self, other: T): R;
 }
-// Handles !
 trait Not<T> {
     fn not(self): T;
 }
+
+// Handles things like var[5] and var[2]=1
+trait Accessible<T, R> {
+    fn getKey(self, key: T): R;
+    fn setKey(self, key: T, val: R);
+}
+
+

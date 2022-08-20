@@ -1,6 +1,8 @@
+use std::collections::VecDeque;
+
 #[cfg(test)]
 use crate::tokenizer;
-use crate::parser;
+use crate::{parser, expression_parser};
 use formatted_debug::table_formatting::StringTable;
 
 
@@ -124,13 +126,33 @@ const TESTS: &[&str] = &[ r"
     }
 "#];
 
+const EXPR_TESTS: &[&str] = &[ "
+    2 + 2
+", "
+    1 + 2 * 3
+", "
+    2 * 3 + 1
+", "
+    myList[2]
+", r#"
+    myDictionary["apple" & "2"]
+"#, "
+    var
+", "
+    var.inside
+", "
+    var.method()
+","
+    function()
+" ];
+
 
 #[test]
 fn test_tokenizer() {
     for t in TESTS {
         let mut tokens = tokenizer::tokenizer(t).unwrap();
         let table: Vec<String> = tokens.iter().map(|f| {
-            format!("{:?}", f)
+            format!("{:#?}", f)
         }).collect();
         println!("{}", table.to_table().join("\n"));
     }
@@ -138,7 +160,7 @@ fn test_tokenizer() {
 
 #[test]
 fn test_parser() {
-    for t in TESTS {
-        //println!("{}\n{:?}\n", t, parser::parse_tokens(&tokenizer::tokenizer(t).unwrap()));
+    for t in EXPR_TESTS {
+        println!("{}\n{:?}\n", t, expression_parser::parse_expression(&mut VecDeque::from(tokenizer::tokenizer(t).unwrap())).unwrap());
     }
 }

@@ -1,16 +1,19 @@
 /*
-    expression      = andcheck, [ '||', expression ];
-    andcheck        = equalcheck, [ '&&', expression ];
-    equalcheck      = comparison, [ eqop, expression ];
-    comparson       = sum, [ compop, expression ];
-    sum             = term, [ addop, expression ];
-    term            = accessor, [ mulop, expression ];
-    accessor        = [ '!' ] exprvalue, [ accop ];
+    expression      = orcheck, [ '&', expression ];
+    orcheck         = andcheck, [ '||', orcheck ];
+    andcheck        = equalcheck, [ '&&', andcheck ];
+    equalcheck      = comparison, [ eqop, equalcheck ];
+    comparison      = sum, [ compop, comparison ];
+    sum             = term, [ addop, sum ];
+    term            = accessor, [ mulop, term ];
+    precheck        = [ '!' ], accessor;
+    accessor        = exprvalue, [ accop ];
     exprvalue       = "(", expression, ")" | NUMBER | STRING | BOOLEAN | initialize | raw_dict | raw_list;
-    
+
     accop           = '[' + expression + ']' | '.' | param_list;
     compop          = '>' | '<' | '>=' | '<=';
     eqop            = '==' | '!=';
+    addop           = '+' | '-';
     mulop           = '*' | '/' | '%';
 */
 
@@ -22,8 +25,16 @@ use crate::{tokenizer::Token, compiler};
 pub enum Value {
     MethodCall {
         on: Box<Value>,
-        name: Method,
-        parameters: Option<Vec<Value>>
+        name: AnonResourceLoc,
+        parameters: Vec<Value>
+    },
+    FunctionCall {
+        fun: AnonResourceLoc,
+        parameters: Vec<Value>
+    },
+    Constructor {
+        data_type: AnonResourceLoc,
+        parameters: Vec<Value>
     },
     GetProperty {
         on: Box<Value>,
@@ -35,8 +46,10 @@ pub enum Value {
     LessEqual(Box<Value>),
     Equal(Box<Value>),
     NotEqual(Box<Value>),
+
     String(String),
-    Num(f32),
+    Variable(AnonResourceLoc),
+    Num(f64),
     Int(i64),
     Boolean(bool),
     ListLiteral, // WIP
@@ -44,162 +57,250 @@ pub enum Value {
 }
 
 #[derive(Debug)]
-pub enum Method {
-    Relative(String),       // Runs method of the name from the caller's class
-    Derive(Vec<String>),     // Runs method of the name from the caller's class that derives from...
-    Absolute(Vec<String>),     // Runs the specific method at that location
+pub enum AnonResourceLoc {
+    Absolute(Vec<String>),
+    Relative(String)
 }
 
-fn parse_expression(queue: &mut VecDeque<Token>) -> Result<Value, compiler::CompileError> {
+
+pub fn parse_expression(queue: &mut VecDeque<Token>) -> Result<Value, compiler::CompileError> {
+    let first = parse_or(queue)?;
+    if let Some(Token::Concat) = queue.front() { 
+        queue.pop_front();
+        let second = parse_expression(queue)?;
+        Ok(Value::MethodCall { 
+            on: Box::new(first), 
+            name: AnonResourceLoc::Absolute(vec![String::from("std"),String::from("operators"),String::from("Concatenate"), String::from("concatenate")]), 
+            parameters: vec![second]
+        })
+    } else {
+        Ok(first)
+    }
+}
+
+fn parse_or(queue: &mut VecDeque<Token>) -> Result<Value, compiler::CompileError> {
+    let first = parse_and(queue)?;
+    if let Some(Token::BoolOr) = queue.front() { 
+        queue.pop_front();
+        let second = parse_or(queue)?;
+        Ok(Value::MethodCall { 
+            on: Box::new(first), 
+            name: AnonResourceLoc::Absolute(vec![String::from("std"),String::from("operators"),String::from("Concatenate"), String::from("concatenate")]),
+            parameters: vec![second]
+        })
+    } else {
+        Ok(first)
+    }
+}
+
+fn parse_and(queue: &mut VecDeque<Token>) -> Result<Value, compiler::CompileError> {
+    let first = parse_eq(queue)?;
+    if let Some(Token::BoolAnd) = queue.front() { 
+        queue.pop_front();
+        let second = parse_and(queue)?;
+        Ok(Value::MethodCall { 
+            on: Box::new(first), 
+            name: AnonResourceLoc::Absolute(vec![String::from("std"),String::from("operators"),String::from("Concatenate"), String::from("concatenate")]),
+            parameters: vec![second]
+        })
+    } else {
+        Ok(first)
+    }
+}
+
+fn parse_eq(queue: &mut VecDeque<Token>) -> Result<Value, compiler::CompileError> {
+    let first = parse_comp(queue)?;
+    if let Some(t) = queue.front() { 
+        match t {
+            Token::Equals => {
+                queue.pop_front();
+                let second = parse_eq(queue)?;
+                Ok(Value::Equal(Box::new(Value::MethodCall { 
+                    on: Box::new(first), 
+                    name: AnonResourceLoc::Absolute(vec![String::from("std"),String::from("operators"),String::from("Comparable"), String::from("compare")]),
+                    parameters: vec![second]
+                })))
+            } 
+            Token::NotEquals => {
+                queue.pop_front();
+                let second = parse_eq(queue)?;
+                Ok(Value::NotEqual(Box::new(Value::MethodCall { 
+                    on: Box::new(first), 
+                    name: AnonResourceLoc::Absolute(vec![String::from("std"),String::from("operators"),String::from("Comparable"), String::from("compare")]),
+                    parameters: vec![second]
+                })))
+            } 
+            _ => Ok(first)
+        }
+    } else {
+        Ok(first)
+    }
+}
+
+fn parse_comp(queue: &mut VecDeque<Token>) -> Result<Value, compiler::CompileError> {
+    let first = parse_sum(queue)?;
+    if let Some(t) = queue.front() { 
+        match t {
+            Token::Greater => {
+                queue.pop_front();
+                let second = parse_comp(queue)?;
+                Ok(Value::Greater(Box::new(Value::MethodCall { 
+                    on: Box::new(first), 
+                    name: AnonResourceLoc::Absolute(vec![String::from("std"),String::from("operators"),String::from("Comparable"), String::from("compare")]),
+                    parameters: vec![second]
+                })))
+            } 
+            Token::Less => {
+                queue.pop_front();
+                let second = parse_comp(queue)?;
+                Ok(Value::Less(Box::new(Value::MethodCall { 
+                    on: Box::new(first), 
+                    name: AnonResourceLoc::Absolute(vec![String::from("std"),String::from("operators"),String::from("Comparable"), String::from("compare")]), 
+                    parameters: vec![second]
+                })))
+            } 
+            Token::GreaterEqual => {
+                queue.pop_front();
+                let second = parse_comp(queue)?;
+                Ok(Value::GreaterEqual(Box::new(Value::MethodCall { 
+                    on: Box::new(first), 
+                    name: AnonResourceLoc::Absolute(vec![String::from("std"),String::from("operators"),String::from("Comparable"), String::from("compare")]),
+                    parameters: vec![second]
+                })))
+            } 
+            Token::LessEqual => {
+                queue.pop_front();
+                let second = parse_comp(queue)?;
+                Ok(Value::LessEqual(Box::new(Value::MethodCall { 
+                    on: Box::new(first), 
+                    name: AnonResourceLoc::Absolute(vec![String::from("std"),String::from("operators"),String::from("Comparable"), String::from("compare")]),
+                    parameters: vec![second] 
+                })))
+            } 
+            _ => Ok(first)
+        }
+    } else {
+        Ok(first)
+    }
+}
+
+fn parse_sum(queue: &mut VecDeque<Token>) -> Result<Value, compiler::CompileError> {
+    let first = parse_term(queue)?;
+    if let Some(t) = queue.front() { 
+        match t {
+            Token::Sum => {
+                queue.pop_front();
+                let second = parse_sum(queue)?;
+                Ok(Value::MethodCall { 
+                    on: Box::new(first), 
+                    name: AnonResourceLoc::Absolute(vec![String::from("std"),String::from("operators"),String::from("Add"), String::from("add")]),
+                    parameters: vec![second] 
+                })
+            } 
+            Token::Minus => {
+                queue.pop_front();
+                let second = parse_sum(queue)?;
+                Ok(Value::MethodCall { 
+                    on: Box::new(first), 
+                    name: AnonResourceLoc::Absolute(vec![String::from("std"),String::from("operators"),String::from("Subtract"), String::from("subtract")]),
+                    parameters: vec![second] 
+                })
+            } 
+            _ => Ok(first)
+        }
+    } else {
+        Ok(first)
+    }
+}
+
+fn parse_term(queue: &mut VecDeque<Token>) -> Result<Value, compiler::CompileError> {
+    let first = parse_pre(queue)?;
+    if let Some(t) = queue.front() { 
+        match t {
+            Token::Multiply => {
+                queue.pop_front();
+                let second = parse_term(queue)?;
+                Ok(Value::MethodCall { 
+                    on: Box::new(first), 
+                    name: AnonResourceLoc::Absolute(vec![String::from("std"),String::from("operators"),String::from("Multiply"), String::from("multiply")]),
+                    parameters: vec![second] 
+                })
+            } 
+            Token::Divide => {
+                queue.pop_front();
+                let second = parse_term(queue)?;
+                Ok(Value::MethodCall { 
+                    on: Box::new(first), 
+                    name: AnonResourceLoc::Absolute(vec![String::from("std"),String::from("operators"),String::from("Divide"), String::from("divide")]),
+                    parameters: vec![second] 
+                })
+            } 
+            Token::Modulo => {
+                queue.pop_front();
+                let second = parse_term(queue)?;
+                Ok(Value::MethodCall { 
+                    on: Box::new(first), 
+                    name: AnonResourceLoc::Absolute(vec![String::from("std"),String::from("operators"),String::from("Modulo"), String::from("modulo")]),
+                    parameters: vec![second] 
+                })
+            } 
+            _ => Ok(first)
+        }
+    } else {
+        Ok(first)
+    }
+}
+
+fn parse_pre(queue: &mut VecDeque<Token>) -> Result<Value, compiler::CompileError> {
+    if let Some(t) = queue.front() { 
+        match t {
+            Token::BoolNot => {
+                let first = parse_acc(queue)?;
+                Ok(Value::MethodCall { 
+                    on: Box::new(first), 
+                    name: AnonResourceLoc::Absolute(vec![String::from("std"),String::from("operators"),String::from("Not"), String::from("not")]),
+                    parameters: Vec::new()
+                })
+            } 
+            _ => parse_acc(queue)
+        }
+    } else {
+        parse_acc(queue)
+    }
+}
+
+fn parse_acc(queue: &mut VecDeque<Token>) -> Result<Value, compiler::CompileError> {
     let first = parse_value(queue)?;
     if let Some(t) = queue.front() { 
         match t {
-            Token::OpenBrace => {
-                let second = parse_expression(queue)?;
-                if let Some(Token::CloseBrace) = queue.front() {
-                    queue.pop_front();
+            Token::OpenBracket => {
+                queue.pop_front(); // Remove [
+                let inside = parse_expression(queue)?;
+                if let Some(Token::CloseBracket) = queue.front() {
+                    queue.pop_front(); // Remove ]
                     Ok(Value::MethodCall { 
                         on: Box::new(first), 
-                        name: Method::Derive(vec![String::from("std"),String::from("operators"),String::from("Accessible"),String::from("access")]), 
-                        parameters: Some(vec![second]) 
+                        name: AnonResourceLoc::Absolute(vec![String::from("std"),String::from("operators"),String::from("Accessible"), String::from("getKey")]),
+                        parameters: vec![inside]
                     })
                 } else {
-                    Err(compiler::CompileError { error_type: compiler::ErrorType::InvalidTokenError, location: 0 }) // 0 for now
+                    Err(compiler::CompileError { error_type: compiler::ErrorType::InvalidTokenError, location: 0 })
                 }
-            }
-            Token::OpenParen => { // TODO THIS
-                todo!()
             }
             Token::Dot => {
-                queue.pop_front();
-                let second = parse_expression(queue)?;
-                if let Value::String(s) = second {
-                    Ok(Value::GetProperty { 
-                        on: Box::new(first), 
-                        name: s,
-                    })
+                queue.pop_front(); // Remove .
+                let second = queue.pop_front();
+                if let Some(Token::Identifier(t)) = second {
+                    if let Some(Token::OpenParen) = queue.front() {
+                        Ok(Value::MethodCall { on: Box::new(first), name: AnonResourceLoc::Relative(t), parameters: parse_param_list(queue)? })
+                    } else {
+                        Ok(Value::GetProperty { on: Box::new(first), name: t })
+                    }
                 } else {
-                    Err(compiler::CompileError { error_type: compiler::ErrorType::InvalidTokenError, location: 0 }) // 0 for now
+                    Err(compiler::CompileError { error_type: compiler::ErrorType::InvalidTokenError, location: 0 })
                 }
-            }
-            Token::Multiply => {
-                queue.pop_front();
-                let second = parse_expression(queue)?;
-                Ok(Value::MethodCall { 
-                    on: Box::new(first), 
-                    name: Method::Derive(vec![String::from("std"),String::from("operators"),String::from("Multiply"),String::from("multiply")]), 
-                    parameters: Some(vec![second]) 
-                })
-            }
-            Token::Divide => {
-                queue.pop_front();
-                let second = parse_expression(queue)?;
-                Ok(Value::MethodCall { 
-                    on: Box::new(first), 
-                    name: Method::Derive(vec![String::from("std"),String::from("operators"),String::from("Divide"),String::from("divide")]), 
-                    parameters: Some(vec![second]) 
-                })
-            }
-            Token::Modulo => {
-                queue.pop_front();
-                let second = parse_expression(queue)?;
-                Ok(Value::MethodCall { 
-                    on: Box::new(first), 
-                    name: Method::Derive(vec![String::from("std"),String::from("operators"),String::from("Modulo"),String::from("modulo")]), 
-                    parameters: Some(vec![second]) 
-                })
-            }
-            Token::Sum => {
-                queue.pop_front();
-                let second = parse_expression(queue)?;
-                Ok(Value::MethodCall { 
-                    on: Box::new(first), 
-                    name: Method::Derive(vec![String::from("std"),String::from("operators"),String::from("Add"),String::from("add")]), 
-                    parameters: Some(vec![second]) 
-                })
-            }
-            Token::Minus => {
-                queue.pop_front();
-                let second = parse_expression(queue)?;
-                Ok(Value::MethodCall { 
-                    on: Box::new(first), 
-                    name: Method::Derive(vec![String::from("std"),String::from("operators"),String::from("Subtract"),String::from("subtract")]), 
-                    parameters: Some(vec![second]) 
-                })
-            }
-            Token::Greater => {
-                queue.pop_front();
-                let second = parse_expression(queue)?;
-                Ok(Value::Greater(Box::new(Value::MethodCall { 
-                    on: Box::new(first), 
-                    name: Method::Derive(vec![String::from("std"),String::from("operators"),String::from("Comparable"),String::from("compare")]), 
-                    parameters: Some(vec![second]) 
-                })))
-            }
-            Token::GreaterEqual => {
-                queue.pop_front();
-                let second = parse_expression(queue)?;
-                Ok(Value::GreaterEqual(Box::new(Value::MethodCall { 
-                    on: Box::new(first), 
-                    name: Method::Derive(vec![String::from("std"),String::from("operators"),String::from("Comparable"),String::from("compare")]), 
-                    parameters: Some(vec![second]) 
-                })))
-            }
-            Token::Less => {
-                queue.pop_front();
-                let second = parse_expression(queue)?;
-                Ok(Value::Less(Box::new(Value::MethodCall { 
-                    on: Box::new(first), 
-                    name: Method::Derive(vec![String::from("std"),String::from("operators"),String::from("Comparable"),String::from("compare")]), 
-                    parameters: Some(vec![second]) 
-                })))
-            }
-            Token::LessEqual => {
-                queue.pop_front();
-                let second = parse_expression(queue)?;
-                Ok(Value::LessEqual(Box::new(Value::MethodCall { 
-                    on: Box::new(first), 
-                    name: Method::Derive(vec![String::from("std"),String::from("operators"),String::from("Comparable"),String::from("compare")]), 
-                    parameters: Some(vec![second]) 
-                })))
-            }
-            Token::Equals => {
-                queue.pop_front();
-                let second = parse_expression(queue)?;
-                Ok(Value::Equal(Box::new(Value::MethodCall { 
-                    on: Box::new(first), 
-                    name: Method::Derive(vec![String::from("std"),String::from("operators"),String::from("Comparable"),String::from("compare")]), 
-                    parameters: Some(vec![second]) 
-                })))
-            }
-            Token::NotEquals => {
-                queue.pop_front();
-                let second = parse_expression(queue)?;    
-                Ok(Value::NotEqual(Box::new(Value::MethodCall { 
-                    on: Box::new(first), 
-                    name: Method::Derive(vec![String::from("std"),String::from("operators"),String::from("Comparable"),String::from("compare")]), 
-                    parameters: Some(vec![second]) 
-                })))
-            }
-            Token::BoolAnd => {
-                queue.pop_front();
-                let second = parse_expression(queue)?; 
-                Ok(Value::MethodCall { 
-                    on: Box::new(first), 
-                    name: Method::Derive(vec![String::from("std"),String::from("operators"),String::from("And"),String::from("and")]), 
-                    parameters: Some(vec![second]) 
-                })
-            }
-            Token::BoolOr => {
-                queue.pop_front();
-                let second = parse_expression(queue)?;
-                Ok(Value::MethodCall { 
-                    on: Box::new(first), 
-                    name: Method::Derive(vec![String::from("std"),String::from("operators"),String::from("Or"),String::from("or")]), 
-                    parameters: Some(vec![second]) 
-                })
-            }
-            _ => Ok(first) // Nothing left :3
+            } 
+            _ => Ok(first)
         }
     } else {
         Ok(first)
@@ -207,11 +308,107 @@ fn parse_expression(queue: &mut VecDeque<Token>) -> Result<Value, compiler::Comp
 }
 
 fn parse_value(queue: &mut VecDeque<Token>) -> Result<Value, compiler::CompileError> {
-    let token = queue.pop_front();
-    // Parse the token into a raw Value
-    todo!()
+    if let Some(token) = queue.front() {
+        match token {
+            Token::Number(_) => {
+                if let Some(Token::Number(n)) = queue.pop_front() {
+                    Ok(Value::Num(n))
+                } else {
+                    Err(compiler::CompileError { error_type: compiler::ErrorType::InternalError, location: 0 })
+                }
+            }
+            Token::Int(_) => {
+                if let Some(Token::Int(n)) = queue.pop_front() {
+                    Ok(Value::Int(n))
+                } else {
+                    Err(compiler::CompileError { error_type: compiler::ErrorType::InternalError, location: 0 })
+                }
+            }
+            Token::String(_) => {
+                if let Some(Token::String(n)) = queue.pop_front() {
+                    Ok(Value::String(n))
+                } else {
+                    Err(compiler::CompileError { error_type: compiler::ErrorType::InternalError, location: 0 })
+                }
+            }
+            Token::Identifier(_) => {
+                let resource = parse_resource_location(queue)?;
+                if let Some(Token::OpenParen) = queue.front() {
+                    Ok(Value::FunctionCall { fun: resource, parameters: parse_param_list(queue)? })
+                } else {
+                    Ok(Value::Variable(resource))
+                }
+            }
+            Token::True => {
+                queue.pop_front();
+                Ok(Value::Boolean(true))
+            }
+            Token::False => {
+                queue.pop_front();
+                Ok(Value::Boolean(false))
+            }
+            Token::OpenBracket => {
+                todo!();
+            }
+            Token::OpenBrace => {
+                todo!();
+            }
+            _ => Err(compiler::CompileError { error_type: compiler::ErrorType::InvalidTokenError, location: 0 })
+        }
+    } else {
+        Err(compiler::CompileError { error_type: compiler::ErrorType::InvalidTokenError, location: 0 })
+    }
 }
 
-fn parse_param_list(queue: &mut VecDeque<Token>) -> Result<Value, compiler::CompileError> {
-    todo!()
+fn parse_param_list(queue: &mut VecDeque<Token>) -> Result<Vec<Value>, compiler::CompileError> {
+    if let Some(Token::OpenParen) = queue.pop_front() {
+        let mut out = Vec::new();
+        loop {
+            let next = queue.front();
+            match next {
+                Some(Token::CloseParen) => {
+                    return Ok(out);
+                }
+                Some(Token::Separator) => {
+                    queue.pop_front();
+                    if let Some(Token::CloseParen) = queue.front() {
+                        return Ok(out);
+                    } else {
+                        out.push(parse_expression(queue)?);
+                    }
+                }
+                Some(_) => {
+                    out.push(parse_expression(queue)?);
+                }
+                None => {
+                    return Err(compiler::CompileError { error_type: compiler::ErrorType::InvalidTokenError, location: 0 });
+                }
+            }
+        }
+    } else {
+        Err(compiler::CompileError { error_type: compiler::ErrorType::InvalidTokenError, location: 0 })
+    }
+}
+
+fn parse_resource_location(queue: &mut VecDeque<Token>) -> Result<AnonResourceLoc, compiler::CompileError> {
+    if let Some(Token::Identifier(s)) = queue.pop_front() {
+        if let Some(Token::Relation) = queue.front() {
+            let mut loc = Vec::new();
+            loop {
+                if let Some(Token::Relation) = queue.pop_front() {
+                    if let Some(Token::Identifier(t)) = queue.pop_front() {
+                        loc.push(t);
+                    } else {
+                        return Err(compiler::CompileError { error_type: compiler::ErrorType::InvalidTokenError, location: 0 });
+                    };
+                } else {
+                    return Ok(AnonResourceLoc::Absolute(loc));
+                }
+            }
+        } else {
+            Ok(AnonResourceLoc::Relative(s))
+        }
+    } else {
+        Err(compiler::CompileError { error_type: compiler::ErrorType::InvalidTokenError, location: 0 })
+    }
 }
