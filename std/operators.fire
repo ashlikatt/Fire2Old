@@ -26,24 +26,6 @@ trait Modulo<T, R> {
 // Handles ==, !=, >, <, >=, and <=
 trait Comparable<T> {
     fn compare(self, other: T): Num;
-    fn isLess(self, other: T): Bool {
-        return self.compare(other) < 0
-    }
-    fn isGreater(self, other: T): Bool {
-        return self.compare(other) > 0
-    }
-    fn isLessEq(self, other: T): Bool {
-        return self.compare(other) <= 0
-    }
-    fn isGreaterEq(self, other: T): Bool {
-        return self.compare(other) >= 0
-    }
-    fn isEqual(self, other: T): Bool {
-        return self.compare(other) == 0
-    }
-    fn isNotEqual(self, other: T): Bool {
-        return self.compare(other) != 0
-    }
 }
 
 // Handles accessing
