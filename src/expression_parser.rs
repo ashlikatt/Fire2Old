@@ -17,7 +17,7 @@
     mulop           = '*' | '/' | '%';
 */
 
-use std::collections::VecDeque;
+use std::{collections::{VecDeque, HashMap}, iter::Map};
 
 use crate::{tokenizer::Token, compiler};
 
@@ -34,7 +34,7 @@ pub enum Value {
     },
     Constructor {
         data_type: AnonResourceLoc,
-        parameters: Vec<Value>
+        parameters: HashMap<String, Value>
     },
     GetProperty {
         on: Box<Value>,
@@ -335,6 +335,8 @@ fn parse_value(queue: &mut VecDeque<Token>) -> Result<Value, compiler::CompileEr
                 let resource = parse_resource_location(queue)?;
                 if let Some(Token::OpenParen) = queue.front() {
                     Ok(Value::FunctionCall { fun: resource, parameters: parse_param_list(queue)? })
+                } else if let Some(Token::OpenBrace) = queue.front() {
+                    Ok(Value::Constructor { data_type: resource, parameters: parse_constructor_properties(queue)? })
                 } else {
                     Ok(Value::Variable(resource))
                 }
@@ -393,9 +395,10 @@ fn parse_param_list(queue: &mut VecDeque<Token>) -> Result<Vec<Value>, compiler:
 fn parse_resource_location(queue: &mut VecDeque<Token>) -> Result<AnonResourceLoc, compiler::CompileError> {
     if let Some(Token::Identifier(s)) = queue.pop_front() {
         if let Some(Token::Relation) = queue.front() {
-            let mut loc = Vec::new();
+            let mut loc = vec![s];
             loop {
-                if let Some(Token::Relation) = queue.pop_front() {
+                if let Some(Token::Relation) = queue.front() {
+                    queue.pop_front();
                     if let Some(Token::Identifier(t)) = queue.pop_front() {
                         loc.push(t);
                     } else {
@@ -503,4 +506,56 @@ fn parse_dict_literal(queue: &mut VecDeque<Token>) -> Result<Value, compiler::Co
     } else {
         Err(compiler::CompileError { error_type: compiler::ErrorType::InvalidTokenError, location: 0 })
     }
+}
+
+
+fn parse_constructor_properties(queue: &mut VecDeque<Token>) -> Result<HashMap<String, Value>, compiler::CompileError> {
+    if let Some(Token::OpenBrace) = queue.pop_front() {
+        let mut properties = HashMap::<String, Value>::new();
+        loop {
+            let next = queue.front();
+            match next {
+                Some(Token::CloseBrace) => {
+                    queue.pop_front();
+                    break;
+                }
+                Some(Token::Separator) => {
+                    queue.pop_front();
+                    if let Some(Token::CloseBrace) = queue.front() {
+                        break;
+                    } else {
+                        if let Some(Token::Identifier(s)) = queue.pop_front() {
+                            if let Some(Token::TypeDef) = queue.pop_front() {
+                                let expr = parse_expression(queue)?;
+                                properties.insert(s, expr);
+                            } else {
+                                return Err(compiler::CompileError { error_type: compiler::ErrorType::InvalidTokenError, location: 0 });
+                            }
+                        } else {
+                            return Err(compiler::CompileError { error_type: compiler::ErrorType::InvalidTokenError, location: 0 });
+                        };
+                    };
+                }
+                Some(_) => {
+                    if let Some(Token::Identifier(s)) = queue.pop_front() {
+                        if let Some(Token::TypeDef) = queue.pop_front() {
+                            let expr = parse_expression(queue)?;
+                            properties.insert(s, expr);
+                        } else {
+                            return Err(compiler::CompileError { error_type: compiler::ErrorType::InvalidTokenError, location: 0 });
+                        }
+                    } else {
+                        return Err(compiler::CompileError { error_type: compiler::ErrorType::InvalidTokenError, location: 0 });
+                    };
+                }
+                None => {
+                    return Err(compiler::CompileError { error_type: compiler::ErrorType::InvalidTokenError, location: 0 });
+                }
+            };
+        };
+        Ok(properties)
+    } else {
+        Err(compiler::CompileError { error_type: compiler::ErrorType::InvalidTokenError, location: 0 })
+    }
+    
 }

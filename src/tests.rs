@@ -158,6 +158,13 @@ const EXPR_TESTS: &[&str] = &[ "
     { b : 2, c : 3 }
 ", "
     { nestedArray: [ 2 + 2 ], nestedDict: { b : 9 } }
+", "
+    Point { x: 2, y: 6 }
+", "
+    std::collections::List::new
+", 
+"
+    Box::new(var)
 " ];
 
 
