@@ -348,10 +348,10 @@ fn parse_value(queue: &mut VecDeque<Token>) -> Result<Value, compiler::CompileEr
                 Ok(Value::Boolean(false))
             }
             Token::OpenBracket => {
-                todo!();
+                parse_list_literal(queue)
             }
             Token::OpenBrace => {
-                todo!();
+                parse_dict_literal(queue)
             }
             _ => Err(compiler::CompileError { error_type: compiler::ErrorType::InvalidTokenError, location: 0 })
         }
@@ -408,6 +408,98 @@ fn parse_resource_location(queue: &mut VecDeque<Token>) -> Result<AnonResourceLo
         } else {
             Ok(AnonResourceLoc::Relative(s))
         }
+    } else {
+        Err(compiler::CompileError { error_type: compiler::ErrorType::InvalidTokenError, location: 0 })
+    }
+}
+
+fn parse_list_literal(queue: &mut VecDeque<Token>) -> Result<Value, compiler::CompileError> {
+    if let Some(Token::OpenBracket) = queue.pop_front() {
+        let mut values = Vec::<Value>::new();
+        loop {
+            let next = queue.front();
+            match next {
+                Some(Token::CloseBracket) => {
+                    queue.pop_front();
+                    break;
+                }
+                Some(Token::Separator) => {
+                    queue.pop_front();
+                    if let Some(Token::CloseBracket) = queue.front() {
+                        break;
+                    } else {
+                        values.push(parse_expression(queue)?);
+                    };
+                }
+                Some(_) => {
+                    values.push(parse_expression(queue)?);
+                }
+                None => {
+                    return Err(compiler::CompileError { error_type: compiler::ErrorType::InvalidTokenError, location: 0 });
+                }
+            };
+        };
+        let mut current = Value::FunctionCall { fun: AnonResourceLoc::Absolute(vec![String::from("std"),String::from("collections"),String::from("List"), String::from("new")]), parameters: Vec::new() };
+        for i in values.into_iter() {
+            current = Value::MethodCall { on: Box::new(current), name: AnonResourceLoc::Absolute(vec![String::from("std"),String::from("collections"),String::from("List"), String::from("push")]), parameters: vec![i] }
+        }
+        Ok(current)
+    } else {
+        Err(compiler::CompileError { error_type: compiler::ErrorType::InvalidTokenError, location: 0 })
+    }
+}
+
+fn parse_dict_literal(queue: &mut VecDeque<Token>) -> Result<Value, compiler::CompileError> {
+    if let Some(Token::OpenBrace) = queue.pop_front() {
+        let mut pairs = Vec::<(String, Value)>::new();
+        loop {
+            let next = queue.front();
+            match next {
+                Some(Token::CloseBrace) => {
+                    queue.pop_front();
+                    break;
+                }
+                Some(Token::Separator) => {
+                    queue.pop_front();
+                    if let Some(Token::CloseBrace) = queue.front() {
+                        break;
+                    } else {
+                        if let Some(Token::Identifier(s)) = queue.pop_front() {
+                            if let Some(Token::TypeDef) = queue.pop_front() {
+                                let expr = parse_expression(queue)?;
+                                pairs.push((s,expr));
+                            } else {
+                                return Err(compiler::CompileError { error_type: compiler::ErrorType::InvalidTokenError, location: 0 });
+                            }
+                        } else {
+                            return Err(compiler::CompileError { error_type: compiler::ErrorType::InvalidTokenError, location: 0 });
+                        };
+                    };
+                }
+                Some(_) => {
+                    if let Some(Token::Identifier(s)) = queue.pop_front() {
+                        if let Some(Token::TypeDef) = queue.pop_front() {
+                            let expr = parse_expression(queue)?;
+                            pairs.push((s,expr));
+                        } else {
+                            return Err(compiler::CompileError { error_type: compiler::ErrorType::InvalidTokenError, location: 0 });
+                        }
+                    } else {
+                        return Err(compiler::CompileError { error_type: compiler::ErrorType::InvalidTokenError, location: 0 });
+                    };
+                }
+                None => {
+                    return Err(compiler::CompileError { error_type: compiler::ErrorType::InvalidTokenError, location: 0 });
+                }
+            };
+        };
+        let mut current = Value::FunctionCall { fun: AnonResourceLoc::Absolute(vec![String::from("std"),String::from("collections"),String::from("Dictionary"), String::from("new")]), parameters: Vec::new() };
+        for i in pairs.into_iter() {
+            let s = Value::String(i.0);
+            let v = i.1;
+            current = Value::MethodCall { on: Box::new(current), name: AnonResourceLoc::Absolute(vec![String::from("std"),String::from("collections"),String::from("Dictionary"), String::from("setKey")]), parameters: vec![s,v] }
+        }
+        Ok(current)
     } else {
         Err(compiler::CompileError { error_type: compiler::ErrorType::InvalidTokenError, location: 0 })
     }

@@ -39,7 +39,7 @@ trait Not<T> {
 // Handles things like var[5] and var[2]=1
 trait Accessible<T, R> {
     fn getKey(self, key: T): R;
-    fn setKey(self, key: T, val: R);
+    fn setKey(self, key: T, val: R): Self;
 }
 
 

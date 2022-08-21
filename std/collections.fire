@@ -1,10 +1,22 @@
 struct Dictionary<T> : Accessible<String, T> {
     @Precondition(keys.len() == values.len())
     @Compile(/* Stuff~! */)
-    fn new(keys: List<String> = [], values: List<T> = []);
+    fn new(keys: List<String> = [], values: List<T> = []): Self;
+
+    @Compile(/* Stuff~! */)
+    fn new(): Self;
+
+    @Compile(/* Stuff~! */)
+    fn getKey(self, key: T): R;
+
+    @Compile(/* Stuff~! */)
+    fn setKey(self, key: T, val: R): Self;
 }
 
 struct List<T> : Accessible<Int, T> {
     @Compile(/* Stuff~! */)
-    fn new();
+    fn new(): Self;
+
+    @Compile(/* Stuff~! */)
+    fn push(value: T): Self;
 }
