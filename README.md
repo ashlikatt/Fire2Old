@@ -34,7 +34,7 @@ The main benefit of this is it will allow multiple pieces of code to all use the
 Here is code to show how you would go about adding a simple join message.
 ```rs
 proc joinGame(e: JoinEvent) {
-  ALL::sendMessage(e.default & " joined!");
+  sendMessage(e.default & " joined!", ALL);
 }
 ```
 A few basic things are happening here.
