@@ -27,6 +27,7 @@ fn test_codeblock() {
         block: String::from("set_var"),
         args: vec![compiler::ValueItem::Varible(String::from("variable")), compiler::ValueItem::String(String::from("this is a string"))],
         tags: vec![],
+        target: None,
         action: String::from("=")
     };
 
@@ -49,21 +50,12 @@ fn test_codeblock() {
         block: String::from("player_action"),
         args: vec![compiler::ValueItem::Varible(String::from("variable"))],
         tags: vec![text_value_merging, alignment_mode],
+        target: Some(String::from("AllPlayers")),
         action: String::from("SendMessage")
     };
-
-    let is_hidden = compiler::TagItem { //Create tag "Is Hidden"
-        option: String::from("False"),
-        tag: String::from("Is Hidden"),
-        action: String::from("dynamic"),
-        block: String::from("func")
-    };
-
-    let function = compiler::FunctionLine {  // Create Function with other blocks
-        args: vec![compiler::ValueItem::Number(2f64)],
+    let function = compiler::EventLine {  // Create Function with other blocks
         blocks: vec![set_var, send_message],
-        tags: vec![is_hidden],
-        name: String::from("func")
+        event: String::from("Join")
     }.to_json();
 
     println!(r#"{{"blocks":[{}]}}"#, function) // Output (with the "blocks" key)

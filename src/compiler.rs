@@ -8,6 +8,21 @@ pub struct CompileError {
     pub location: usize,
 }
 
+pub struct EventLine {
+    pub blocks: Vec<CodeBlock>,
+    pub event: String
+}
+impl EventLine {
+    pub fn to_json(&self) -> String {
+        let mut event_line = format!(r#"{{"id":"block","block":"event","args":{{"items":[]}},"action":"{}"}}"#, self.event); // Setup for FunctionBlock
+        for (_, e) in self.blocks.iter().enumerate() {
+            event_line.push(','); // Comma for JSON
+            event_line.push_str(e.to_json().as_str()); // Push CodeBlock
+        };
+        event_line
+    }
+}
+
 pub struct FunctionLine {
     pub args: Vec<ValueItem>,
     pub blocks: Vec<CodeBlock>,
@@ -44,10 +59,11 @@ pub struct CodeBlock {
     pub block: String,
     pub args: Vec<ValueItem>,
     pub tags: Vec<TagItem>,
+    pub target: Option<String>,
     pub action: String
 }
 impl CodeBlock {
-    pub fn to_json(&self) -> String {
+    fn to_json(&self) -> String {
         let mut args_str: String = String::from(r#"{"items":["#); // Setup for ValueItems
         for (pos, e) in self.args.iter().enumerate() {
             if args_str.len() != 10 { args_str.push(',') } // Check if index not zero and put a comma for JSON
@@ -62,7 +78,13 @@ impl CodeBlock {
             args_str.push_str(format!(r#","slot":{}}}"#, 27-self.tags.len()+pos).as_str()); // Have the slot number for DiamondFire
         };        
         args_str.push_str("]}");
-        format!(r#"{{"id":"{}","block":"{}","args":{},"action":"{}"}}"#, self.id.as_str(), self.block.as_str(), args_str, self.action.as_str()) // Setup for CodeBlock
+        if self.block == "player_action" || self.block == "entity_action" || self.block == "if_player" || self.block == "if_entity" { // Check if block has target possibility.\
+            let target = match &self.target {
+                None => String::from("Selection"),
+                Some(n) => n.to_string()
+            };
+            format!(r#"{{"id":"{}","block":"{}","args":{},"action":"{}","target":"{}"}}"#, self.id.as_str(), self.block.as_str(), args_str, self.action.as_str(), target ) // Finish for CodeBlock
+        } else { format!(r#"{{"id":"{}","block":"{}","args":{},"action":"{}"}}"#, self.id.as_str(), self.block.as_str(), args_str, self.action.as_str()) } // Finish for CodeBlock
     }
 }
 
