@@ -1,0 +1,18 @@
+let objectMemory: BigArray<Any> = BigArray::new();
+let memID: Int = 0;
+
+struct Box<T> {
+  let pointer: Int;
+  
+  fn from(val: T): Box<T> {
+    memID += 1;
+    objectMemory[pointer] = val;
+    return Box<T> {
+      pointer: memID
+    }
+  }
+  
+  fn deref(self): T {
+    return objectMemory[self.pointer] as T;
+  }
+}
