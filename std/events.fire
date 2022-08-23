@@ -1,0 +1,18 @@
+@Event(todo(), { playerName: todo(), playerUUID: todo() })
+struct JoinEvent {
+  playerName: String,
+  playerUUID: String
+}
+
+@Event(todo(), { playerName: todo(), playerUUID: todo() })
+struct QuitEvent {
+  playerName: String,
+  playerUUID: String
+}
+
+@Event(todo(), { playerName: todo(), playerUUID: todo(), clickedBlock: todo() })
+struct RightClickEvent {
+  playerName: String,
+  playerUUID: String,
+  clickedBlock: Loc
+}
