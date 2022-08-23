@@ -4,10 +4,10 @@ let memID: Int = 0;
 struct Box<T> {
   let pointer: Int;
   
-  fn from(val: T): Box<T> {
+  fn from<R>(val: R): Box<R> {
     memID += 1;
     objectMemory[pointer] = val;
-    return Box<T> {
+    return Box<R> {
       pointer: memID
     }
   }
