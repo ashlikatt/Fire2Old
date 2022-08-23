@@ -1,0 +1,23 @@
+// Booleans are really just 1 and 0.
+@ValueItem
+struct Boolean : Comparable<Boolean, Boolean>, Or<Boolean>, And<Boolean, Boolean>, Not<Boolean, Boolean> {
+  @Compile(todo())
+  fn compare(self, other: Boolean): Num {
+    return self as Int - other as Int;
+  }
+  
+  @Compile(todo())
+  fn or(self, other: Boolean): Boolean {
+    return not(not(self) as Int * not(self) as Int);
+  }
+  
+  @Compile(todo())
+  fn and(self, other: Boolean): Boolean {
+    return self as Int * other as Int;
+  }
+  
+  @Compile(todo())
+  fn not(self): Boolean {
+    return (1 - self as Int) as Boolean;
+  }
+}
