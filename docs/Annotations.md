@@ -11,6 +11,31 @@ These can safely be used.
 ---
 Used before a top-level variable declaration to mark it as being a saved variable. 
 
+### @Const
+---
+Used before a parameter to a function or process to specify that only consistent values may be passed.
+```java
+fn myFun(@Const a: String);
+...
+myFun("Cool!") // Valid
+let a = "Cool!";
+myFun(a) // Invalid
+```
+
+### @Pure
+---
+Mark a function as being "pure". A pure function gets no data from outside itself.
+Example:
+```java
+@Pure
+fn safeDivide(a: Num, b: Num): Num {
+    if (b==0) raise "DivByZero";
+    return a/b;
+}
+```
+This function is pure because it only uses its parameters.
+The compiler will throw an error if a non-pure function is marked with @Pure, and likewise will automatically mark valid functions with @Pure during compile-time.
+(This annotation is used by the compiler for optimizing code)
 
 
 ## Dangerous Annotations
@@ -21,9 +46,8 @@ These can seriously break code if used incorrectly. Intended for internal use.
 ---
 Used before a struct definition to mark it as being an Event.
 
-`@Event(type: String, name: String, args: Dictionary<String>)`
-1. type - The type of event as it appears on the sign. ("PLAYER EVENT", "ENTITY EVENT", etc)
-2. name - The name of the event as it appears on the sign. ("Join", "RightClick", etc)
+`@Event(block: std::compile::CodeBlock, args: Dict<Any>)`
+1. block - The event codeblock.
 3. args - Dict of Game Values to build the struct when the event is called. ("Event Block Side", "Event Command", etc. Use `/i tag list` on a Game Value for more information). All struct values must be supplied.
 
 Example stdlib:
@@ -41,7 +65,7 @@ struct CommandEvent {
 ---
 Used before a function or process definition to override how it is compiled into DiamondFire.
 
-`@Compile(blocks: List<std.compile.CodeBlock>)`
+`@Compile(blocks: List<std::compile::CodeBlock>)`
 1. blocks - CodeBlocks to place instead of a regular call / definition.
 
 Example stdlib:
@@ -54,6 +78,16 @@ fn average(v: Var<Number>, n: Number...) {} // No code needed
 
 ### @ValueItem
 ---
-Used before a struct to mark a type as being able to convert to a DF item, and define how to do so.
+Used before a struct to mark a type as being able to convert to a raw DF item (Strings, numbers, etc), however the process for the conversion is hard-coded and handled internally. 
 
-`@ValueItem()` TODO
+Example:
+```
+@ValueItem
+struct Loc {
+    x: Num,
+    y: Num,
+    z: Num,
+    pitch: Num,
+    yaw: Num
+}
+```
