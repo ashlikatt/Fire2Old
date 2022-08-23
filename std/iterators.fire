@@ -1,5 +1,5 @@
 trait Iterator<T> {
-    fn hasNext(self): bool;
+    fn hasNext(self): Boolean;
     fn next(self): T;
 }
 
@@ -12,7 +12,7 @@ struct IntRange : Iterator<Int> {
     end: Int,
     step: Int,
 
-    fn hasNext(self): bool {
+    fn hasNext(self): Boolean {
         return cur <= end;
     }
 
@@ -43,7 +43,7 @@ struct Range : Iterator<Num> {
     end: Num,
     step: Num,
 
-    fn hasNext(self): bool {
+    fn hasNext(self): Boolean {
         return cur <= end;
     }
 
@@ -79,7 +79,7 @@ struct Grid : Iterator<Loc> {
     endY: Int,
     endZ: Int
 
-    fn hasNext(self): bool {
+    fn hasNext(self): Boolean {
         return self.curX<self.endX && self.curY<self.endY && self.curZ<self.endZ;
     }
 
