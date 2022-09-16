@@ -20,7 +20,12 @@ trait Concatenate<T, R> {
     fn concatenate(self, other: T): R;
 }
 
-// Handles ==, !=, >, <, >=, and <=
+// Handles == and !=
+trait Equality {
+    fn isEqual(self, other: Self): Boolean;
+}
+
+// Handles >, <, >=, and <=.
 trait Comparable<T> {
     fn compare(self, other: T): Num;
 }

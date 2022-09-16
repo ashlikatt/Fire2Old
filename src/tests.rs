@@ -182,6 +182,6 @@ fn test_tokenizer() {
 #[test]
 fn test_parser() {
     for t in EXPR_TESTS {
-        println!("{}\n{:?}\n", t, expression_parser::parse_expression(&mut VecDeque::from(tokenizer::tokenizer(t).unwrap())).unwrap());
+        println!("{}\n{:#?}\n", t, expression_parser::parse_expression(&mut VecDeque::from(tokenizer::tokenizer(t).unwrap())).unwrap());
     }
 }

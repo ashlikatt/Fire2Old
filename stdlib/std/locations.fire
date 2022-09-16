@@ -1,0 +1,92 @@
+enum AlignType {
+    CENTER = "todo";
+    CORNER = "todo";
+}
+
+
+@Value
+struct Loc : Add<Loc, Loc>, Subtract<Loc, Loc>, Equality {
+
+    @Get(todo())
+    @Set(todo())
+    x: Num,
+
+    @Get(todo())
+    @Set(todo())
+    y: Num,
+
+    @Get(todo())
+    @Set(todo())
+    z: Num,
+
+    @Get(todo())
+    @Set(todo())
+    pitch: Num,
+
+    @Get(todo())
+    @Set(todo())
+    yaw: Num
+
+    @Pure
+    fn from(x: Num, y: Num, z: Num, pitch: Num = 0, yaw: Num = 0): Loc {
+        return Loc {
+            x: x,
+            y: y,
+            z: z,
+            pitch: pitch,
+            yaw: yaw
+        };
+    }
+
+    @Compile(todo())
+    fn center(locs: List<Loc>): Loc;
+
+    @Compile(todo())
+    fn random(begin: Loc, end: Loc): Loc;
+
+    @Compile(todo())
+    fn shifted(self, x: Num, y: Num, z: Num): Loc;
+
+    @Compile(todo())
+    fn shifted(self, vec: Vector): Loc;
+
+    @Compile(todo())
+    fn shiftedDir(self, forward: Num, upward: Num, sideways: Num): Loc;
+
+    @Compile(todo())
+    fn shiftedTowards(self, loc: Loc, distance: Num): Loc;
+
+    @Compile(todo())
+    fn getDirection(self): Vector;
+
+    @Compile(todo())
+    fn withDirection(self, dir: Vector): Loc;
+
+    @Compile(todo())
+    fn withYawShift(self, amount: Num): Loc;
+
+    @Compile(todo())
+    fn withPitchShift(self, amount: Num): Loc;
+
+    @Compile(todo())
+    fn facing(self, other: Loc): Loc;
+
+    @Compile(todo())
+    fn aligned(self, @Const type: AlignType = AlignType::CENTER): Loc;
+
+    @Compile(todo())
+    fn withoutRot(self): Loc;
+
+    @Compile(todo())
+    fn dist(self, other: Loc): Num;
+
+    @Compile(todo())
+    fn add(self, other: Loc): Loc;
+
+    @Compile(todo())
+    fn subtract(self, other: Loc): Loc;
+
+    @Compile(todo())
+    fn isEqual(self, other: Loc): Boolean;
+
+}
