@@ -1,32 +1,28 @@
+use core::fmt;
+
 
 #[derive(Eq)]
+#[derive(Debug)]
 pub struct ResourceLoc {
-    file: FileLoc,
-    elem: ElementLoc
+    pub loc: Vec<String>
 }
-impl PartialEq for ResourceLoc {
-    fn eq(&self, other: &Self) -> bool {
-        self.file == other.file && self.elem == other.elem
+impl ResourceLoc {
+    pub fn new() -> ResourceLoc {
+        ResourceLoc { loc: Vec::new() }
+    }
+    pub fn with(&self, other: String) -> ResourceLoc {
+        let mut new = self.loc.clone();
+        new.push(other);
+        ResourceLoc { loc: new }
     }
 }
-
-#[derive(Eq)]
-pub struct FileLoc {
-    loc: Vec<String>
-}
-impl PartialEq for FileLoc {
+impl PartialEq for ResourceLoc {
     fn eq(&self, other: &Self) -> bool {
         self.loc == other.loc
     }
 }
-impl FileLoc {
-    pub fn with(&self, next: String) -> FileLoc {
-        let mut new = self.loc.clone();
-        new.push(next);
-        FileLoc {
-            loc: new
-        }
+impl fmt::Display for ResourceLoc {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&self.loc.join("::"))
     }
 }
-
-type ElementLoc = FileLoc;

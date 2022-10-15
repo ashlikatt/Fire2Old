@@ -1,0 +1,5 @@
+// lib.fire
+
+fn lerp(a: Num, b: Num, p: Num) {
+    return ((b-a)*p)+a;
+}

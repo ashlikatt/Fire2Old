@@ -1,1 +1,8 @@
-awesome uwu
+// game.fire
+
+import myLibrary::lib;
+
+@EventHandler
+proc onJoin(e: PlayerJoinEvent) {
+    e.player.sendMessage(lerp(0, 10, 0.4) & "!");
+}
